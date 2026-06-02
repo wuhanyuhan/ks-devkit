@@ -1,6 +1,6 @@
 {
   "name": "@wuhanyuhan/ks-app",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Keystone MCP service SDK for TypeScript/Bun",
   "type": "module",
   "main": "./dist/index.cjs",
