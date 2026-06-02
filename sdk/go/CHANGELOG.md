@@ -1,5 +1,11 @@
 # ksapp SDK Changelog
 
+## [Unreleased]
+
+### Added
+
+- mcpproto / ksapp 新增 `ks_conversation_id` caller-context 字段 + `ConversationID(ctx)` helper：keystone 调工具时经 `_meta` 透传 keystone 会话 ID，被调服务据此把决策门 / 交付物回流到正确会话。与 `ks_user_id` 等同款。
+
 ## [sdk/go/v0.13.0] - 2026-05-31
 
 > capability mesh 去前缀 + mcp_tool 复用 + 形态对齐 + Go↔Python wire-compat。含 BREAKING，迁移见下。

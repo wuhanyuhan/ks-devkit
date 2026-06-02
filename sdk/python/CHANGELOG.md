@@ -1,5 +1,11 @@
 # ks-app-sdk Changelog
 
+## [Unreleased]
+
+### Added
+
+- `ks_app.context` 新增 `ks_conversation_id` 字段（`ToolContext.conversation_id` + `_set_meta` 读取 + `_reset_meta` 清理）：keystone 调工具时经 `_meta` 透传 keystone 会话 ID，被调服务据此把决策门 / 交付物回流到正确会话。与 `ks_user_id` 等同款，与 Go SDK 对齐。
+
 ## [sdk/python/v0.9.0] - 2026-05-31
 
 > capability mesh 去前缀 + mcp_tool 复用 + 形态对齐 + Go↔Python wire-compat。含 BREAKING，迁移见下。
