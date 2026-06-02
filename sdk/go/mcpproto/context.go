@@ -25,6 +25,8 @@ const (
 	// keystone mcptool executor 配套往 _meta 放 ks_chain_snapshot 后，mcp_tool 路径的
 	// 被调 capability 才能拿到非空 ChainHeader 继续透传。
 	keyChainSnapshot contextKey = "ks_chain_snapshot"
+	// keystone 会话 ID：caller context，下游据此把决策门 / 交付物等回流到正确的 keystone 会话。
+	keyConversationID contextKey = "ks_conversation_id"
 )
 
 // WithMeta 从 MCP _meta 字段构建携带 Keystone 上下文信息的 context。
@@ -47,6 +49,7 @@ func WithMeta(parent context.Context, meta map[string]any) context.Context {
 		{"ks_caller_kind", keyCallerKind},
 		{"ks_chain_id", keyChainID},
 		{"ks_chain_snapshot", keyChainSnapshot},
+		{"ks_conversation_id", keyConversationID},
 	}
 	for _, k := range stringKeys {
 		if v, ok := meta[k.metaKey].(string); ok {
@@ -128,5 +131,12 @@ func ChainID(ctx context.Context) string {
 // 的 _meta 透传形态；keystone mcptool executor 配套透传后生效）。
 func ChainSnapshot(ctx context.Context) string {
 	v, _ := ctx.Value(keyChainSnapshot).(string)
+	return v
+}
+
+// ConversationID 从 context 提取 keystone 会话 ID（caller context，承载 wire ks_conversation_id）。
+// 下游服务据此把决策门 / 交付物等回流到正确的 keystone 会话。
+func ConversationID(ctx context.Context) string {
+	v, _ := ctx.Value(keyConversationID).(string)
 	return v
 }

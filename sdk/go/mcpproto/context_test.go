@@ -62,3 +62,14 @@ func TestWithMeta_NonStringValue(t *testing.T) {
 		t.Errorf("ResourceScope = %q，期望空字符串（非 string 值应被忽略）", v)
 	}
 }
+
+func TestWithMeta_ConversationID(t *testing.T) {
+	ctx := WithMeta(context.Background(), map[string]any{"ks_conversation_id": "1183"})
+	if v := ConversationID(ctx); v != "1183" {
+		t.Errorf("ConversationID = %q，期望 1183", v)
+	}
+	// 未注入时空字符串
+	if v := ConversationID(WithMeta(context.Background(), nil)); v != "" {
+		t.Errorf("ConversationID(nil meta) = %q，期望空", v)
+	}
+}
