@@ -1,6 +1,6 @@
 # ksapp SDK Changelog
 
-## [Unreleased]
+## [sdk/go/v0.15.0] - 2026-06-02
 
 ### Added
 

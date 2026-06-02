@@ -1,6 +1,6 @@
 # ks-app-sdk Changelog
 
-## [Unreleased]
+## [sdk/python/v0.11.0] - 2026-06-02
 
 ### Added
 
