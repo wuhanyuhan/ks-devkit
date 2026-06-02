@@ -4,7 +4,7 @@
 
 适用于：
 - `ks-devkit/sdk/go/ksapp/keystoneclient/SelfClient`
-- `ks-squad-framework/core/managed/SelfClient`
+- squad 运行时框架的 managed SelfClient（独立实现）
 - 任何未来想接入 keystone 托管资源的 SDK / 框架
 
 ## 套件范围
@@ -26,4 +26,4 @@
 ## 已通过 claimants
 
 - ks-devkit/sdk/go/ksapp（参考实现，net/http）
-- ks-squad-framework（gin 栈，独立实现）
+- squad 运行时框架（gin 栈，独立实现）

@@ -6,6 +6,8 @@ Squad 自定义 widget 的 iframe 客户端 SDK，实现 keystone `widgets-proto
 
 ## 安装
 
+> ⚠️ 该包暂未发布到 npm，目前随本仓源码提供（`sdk/typescript/squad-widget-sdk/`）。发布到 npm 后即可用下列命令安装。
+
 ```bash
 npm install @wuhanyuhan/squad-widget-sdk
 # 或

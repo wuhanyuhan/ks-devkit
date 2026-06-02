@@ -74,8 +74,7 @@ claimant 在以下情况必须返回 / 报告错误（"返回"可以是 error / 
 
 `data.env` 的值可能是 string / number（如 `3306`）/ bool。客户端必须 coerce 成 string。
 
-参考实现：见 `ks-devkit/sdk/go/ksapp/keystoneclient/self_client.go` 与
-`ks-squad-framework/core/managed/selfclient.go` 中的 `coerceString` 函数。
+参考实现：见 `ks-devkit/sdk/go/ksapp/keystoneclient/self_client.go` 中的 `coerceString` 函数（squad 运行时框架另有独立实现）。
 
 ## 3. 套件运行方式
 

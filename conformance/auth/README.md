@@ -30,7 +30,7 @@ service：
 - `sdk/go/conformance-claimant/`（Go，ksapp SDK）
 - `sdk/python/conformance-claimant/`（Python，ks_app SDK）
 - `sdk/typescript/conformance-claimant/`（TypeScript，ks-app SDK）
-- `ks-squad-framework/conformance-claimant/`（Go，squad framework）
+- squad 运行时框架（Go，独立实现）
 
 ### 3. 跑 conformance
 
