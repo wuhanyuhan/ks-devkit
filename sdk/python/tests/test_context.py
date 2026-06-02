@@ -197,3 +197,13 @@ def test_tool_context_exposes_caller_fields():
         assert ctx.chain_id == "chn_1"
     finally:
         _reset_meta()
+
+
+def test_conversation_id_from_meta():
+    from ks_app.context import _set_meta, _reset_meta, get_context
+    _set_meta({"ks_conversation_id": 1183})  # 非 string，应被 coerce 成 "1183"
+    try:
+        assert get_context().conversation_id == "1183"
+    finally:
+        _reset_meta()
+    assert get_context().conversation_id == ""

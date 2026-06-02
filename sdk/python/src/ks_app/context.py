@@ -43,6 +43,8 @@ _ks_chain_id: ContextVar[str] = ContextVar("ks_chain_id", default="")
 # capability mesh 调用链快照（mcp_tool 复用降级路径经 ToolContext 透传，
 # 注入到被复用 tool wrap 出的下游调用 _meta.ks_chain_snapshot）。
 _ks_chain_snapshot: ContextVar[str] = ContextVar("ks_chain_snapshot", default="")
+# keystone 会话 ID：caller context，下游据此把决策门 / 交付物等回流到正确的 keystone 会话。
+_ks_conversation_id: ContextVar[str] = ContextVar("ks_conversation_id", default="")
 
 
 class ToolContext:
@@ -111,6 +113,14 @@ class ToolContext:
         """capability mesh 调用链 ID（承载 wire ks_chain_id）。"""
         return _ks_chain_id.get()
 
+    @property
+    def conversation_id(self) -> str:
+        """keystone 会话 ID（承载 wire ks_conversation_id）。
+
+        下游据此把决策门 / 交付物等回流到正确的 keystone 会话。
+        """
+        return _ks_conversation_id.get()
+
 
 def get_context() -> ToolContext:
     """获取当前 tools/call 调用的 Keystone 运行时上下文。
@@ -171,6 +181,8 @@ def _set_meta(meta: dict | None) -> None:
         _ks_chain_id.set(_coerce(meta["ks_chain_id"]))
     if "ks_chain_snapshot" in meta:
         _ks_chain_snapshot.set(_coerce(meta["ks_chain_snapshot"]))
+    if "ks_conversation_id" in meta:
+        _ks_conversation_id.set(_coerce(meta["ks_conversation_id"]))
 
 
 def _reset_meta() -> None:
@@ -191,3 +203,4 @@ def _reset_meta() -> None:
     _ks_caller_kind.set("")
     _ks_chain_id.set("")
     _ks_chain_snapshot.set("")
+    _ks_conversation_id.set("")
