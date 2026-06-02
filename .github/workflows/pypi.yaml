@@ -6,6 +6,7 @@ on:
       - "sdk/python/v*"
 
 permissions:
+  id-token: write  # OIDC trusted publishing：用 GitHub OIDC token 与 PyPI 交换短期发布凭证（不再依赖 PYPI_TOKEN）
   contents: read
 
 jobs:
@@ -18,14 +19,13 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install build tools
-        run: pip install build twine
+      - name: Install build tool
+        run: pip install build
 
       - name: Build package
         run: cd sdk/python && python -m build
 
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: twine upload sdk/python/dist/*
+      - name: Publish to PyPI (OIDC trusted publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: sdk/python/dist
