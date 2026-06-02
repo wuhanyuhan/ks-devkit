@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/mcp/relay/vector_store/delete",
+    "body": {
+      "collection": "documents",
+      "ids": ["doc1"]
+    }
+  },
+  "response": {"status": "ok"}
+}

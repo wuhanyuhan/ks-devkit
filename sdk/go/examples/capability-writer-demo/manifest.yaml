@@ -1,0 +1,42 @@
+# SDK examples/capability-writer-demo（Go 端，对齐 Python sdk/python/examples/capability_writer_demo）
+# 演示 ksapp v0.8.0 capability mesh 能力：
+#   - capability 1（mcp_tool backend）：list_articles —— sync 列表查询
+#   - capability 2（http_endpoint backend）：create_article —— long_running 创作
+#
+# manifest 顶层用 ks-types v0.19.0 flat schema（id / name / version / type / runtime / provides）。
+
+id: writer-demo-go
+name: writer-demo-go
+version: 0.1.0
+type: service
+
+runtime:
+  mode: container
+  port: 8000
+  image: "writer-demo-go:0.1.0"
+
+provides:
+  capabilities:
+    - name: list_articles
+      display_name: 列出文章
+      execution_mode: sync
+      timeout_ms: 5000
+      backend:
+        kind: mcp_tool
+        tool_name: list_articles
+      intent_summary: 查询当前用户的文章列表
+      cost_hint: low
+      side_effect_level: readonly
+
+    - name: create_article
+      display_name: 生成文章
+      execution_mode: long_running
+      timeout_ms: 300000
+      backend:
+        kind: http_endpoint
+        path: /capabilities/create_article
+        method: POST
+      intent_summary: 写一篇关于指定主题的文章
+      cost_hint: high
+      side_effect_level: local_write
+      resumable: false

@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/apps/self/invoke",
+    "body": {
+      "capability": "test.echo",
+      "args": {"message": "hi"},
+      "mode": "sync",
+      "on_behalf_of_user_id": 42
+    }
+  },
+  "response": {
+    "code": 0,
+    "message": "",
+    "data": {"result": {"ok": true}, "duration_ms": 1}
+  }
+}

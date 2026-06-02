@@ -1,0 +1,13 @@
+id: backend-engineer
+name: 后端工程师
+version: 0.1.0
+type: agent
+runtime:
+  mode: none
+mount:
+  agent:
+    create_agent: true
+    name: 后端工程师
+    profile:
+      display_name: 后端工程师
+      description: 协助后端架构、API 设计与排障

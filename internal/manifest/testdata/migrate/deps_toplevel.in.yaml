@@ -1,0 +1,19 @@
+id: ks-mcp-squad-marketing
+name: Marketing Squad
+version: 0.1.0
+type: service
+dependencies:
+  requires:
+    - id: ks-mcp-knowledge
+      version: ">=1.0.0"
+  conflicts:
+    - id: ks-mcp-old-marketing
+      reason: 功能重叠
+license:
+  sku: pro
+  features: [campaign]
+a2a:
+  enabled: true
+runtime:
+  port: 9001
+  mode: container

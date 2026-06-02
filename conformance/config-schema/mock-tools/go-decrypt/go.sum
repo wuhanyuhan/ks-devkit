@@ -1,0 +1,6 @@
+github.com/golang-jwt/jwt/v5 v5.3.1 h1:kYf81DTWFe7t+1VvL7eS+jKFVWaUnK9cB1qbwn63YCY=
+github.com/golang-jwt/jwt/v5 v5.3.1/go.mod h1:fxCRLWMO43lRc8nhHWY6LGqRcf+1gQWArsqaEUEa5bE=
+github.com/wuhanyuhan/ks-types v0.6.0 h1:A43++BIFhvWXt4YCuEoZ5p+8NMF2DYsGaaS9AtrQEks=
+github.com/wuhanyuhan/ks-types v0.6.0/go.mod h1:z5kAPyfdw/L/Y+6dqFscvK4BeeB34HfdtLLbjVVDjN8=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

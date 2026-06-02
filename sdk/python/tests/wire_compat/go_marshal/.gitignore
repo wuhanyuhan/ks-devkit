@@ -1,0 +1,3 @@
+# 误执行 `go build` 时落下的二进制产物。
+# 测试入口走 `go run .`，不需要预编译产物。
+/wire-compat-helper

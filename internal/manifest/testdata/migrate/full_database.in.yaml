@@ -1,0 +1,54 @@
+id: ks-mcp-database
+name: 数据库连接器
+version: "0.1.0"
+type: service
+protection: none
+summary: 只读业务数据库连接器（v1：MySQL/PostgreSQL）
+description: |
+  让 agent 对客户业务数据库做安全的只读查询：列数据源、列表、看表结构、跑 SELECT。
+runtime:
+  mode: container
+  port: 9986
+  health_check_url: "http://localhost:9986/healthz"
+  image: "ks-mcp-database:0.1.0"
+provides:
+  capabilities:
+    - canonical_name: ks-mcp-database.run_query
+      display_name: 执行只读查询
+      execution_mode: sync
+      timeout_ms: 60000
+      backend: { kind: mcp_tool, tool_name: run_query }
+      cost_hint: medium
+      side_effect_level: none
+      intent_summary: 对业务数据库执行只读 SELECT 查询
+      natural_description: 以安全只读方式对指定数据源执行 SELECT 查询，返回行集、列元数据与执行的 SQL。
+      input_nl: datasource 数据源名称与 sql 只读 SELECT 语句
+      output_nl: 查询结果集（列名与数据行）、行数、实际执行的 SQL
+      default_grant: { roles: ["admin", "user"] }
+      allowed_callers: { apps: ["*"] }
+    - canonical_name: ks-mcp-database.grant_datasource
+      display_name: 授权数据源给 agent
+      execution_mode: sync
+      timeout_ms: 15000
+      backend: { kind: http_endpoint, path: /capabilities/grant_datasource, method: POST }
+      cost_hint: light
+      side_effect_level: soft_reversible
+      intent_summary: 把某数据源授权给某 agent 使用
+      natural_description: 建立数据源↔agent 的访问授权；未授权的 agent 看不到也用不了该数据源。
+      input_nl: datasource_name 数据源名称 与 agent_id 目标 agent 的 id
+      output_nl: 授权结果，回显 datasource_name、agent_id 与授权状态
+      default_grant: { roles: ["admin"] }
+      allowed_callers: { apps: ["*"] }
+managed_resources:
+  mysql:
+    required: true
+    database: auto
+    user: auto
+    retain_on_uninstall: true
+    inject:
+      host: DB_HOST
+      password: DB_PASSWORD
+  storage:
+    required: true
+    files:
+      size_mb: 1024

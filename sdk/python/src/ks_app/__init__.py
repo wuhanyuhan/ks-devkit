@@ -1,0 +1,131 @@
+from .app import App
+from .auth.context import get_claims
+from .auth_resolver import AuthResolveError
+from .capability_context import CapabilityContext
+from .config_handle import Config, ConfigSpec, new_config
+from .context import ToolContext, get_context
+from .errors import (
+    ApprovalRequired,
+    AppQuotaExceeded,
+    AuthError,
+    BackendError,
+    Cancelled,
+    CapabilityConcurrencyLimit,
+    CapabilityDisabled,
+    CapabilityForbidden,
+    CapabilityNotFound,
+    CapabilityUnavailable,
+    DependencyError,
+    DispatcherRestarted,
+    ExecutionError,
+    GuardrailBlocked,
+    InvalidArgs,
+    KeystoneError,
+    LoopDetected,
+    ManifestMismatch,
+    NotFoundError,
+    RateLimitError,
+    TaskNotFound,
+    Timeout,
+    TokenAudienceMismatch,
+    TokenExpired,
+    TokenInvalid,
+    UserQuotaExceeded,
+)
+from .errors import PermissionError as CapabilityPermissionError
+from .errors import ValidationError as CapabilityValidationError
+from .embedding import EmbeddingClient, EmbeddingNotConfiguredError, EmbeddingResult
+from .llm import ChatRequest, ChatResponse, LLMClient
+from .task import CapabilityCall, Task
+from .tool import Param, tool
+from .tool_ui import ToolResult, ToolUIBinding
+from .tool_ui_widgets import (
+    WidgetActionDescriptor,
+    WidgetBadge,
+    WidgetCard,
+    WidgetCardGridV1,
+    WidgetDiffAnnotation,
+    WidgetDiffReviewV1,
+    WidgetDiffSegment,
+    WidgetEmptyState,
+    WidgetImageItem,
+    WidgetImageVariantsV1,
+    WidgetListActionsV1,
+    WidgetListItem,
+    WidgetTimelineNode,
+    WidgetTimelineV1,
+)
+from .vector_store import Point, SearchResult, VectorStoreClient
+
+__all__ = [
+    "App",
+    "tool",
+    "Param",
+    "get_context",
+    "ToolContext",
+    "get_claims",
+    "AuthResolveError",
+    "LLMClient",
+    "ChatRequest",
+    "ChatResponse",
+    "EmbeddingClient",
+    "EmbeddingResult",
+    "EmbeddingNotConfiguredError",
+    "VectorStoreClient",
+    "Point",
+    "SearchResult",
+    "Config",
+    "ConfigSpec",
+    "new_config",
+    # Capability Mesh caller-side
+    "CapabilityContext",
+    "CapabilityCall",
+    "Task",
+    # widgets-protocol-v1 公共 API
+    "ToolUIBinding",
+    "ToolResult",
+    "WidgetListActionsV1",
+    "WidgetDiffReviewV1",
+    "WidgetTimelineV1",
+    "WidgetCardGridV1",
+    "WidgetImageVariantsV1",
+    # widget 子类型
+    "WidgetListItem",
+    "WidgetBadge",
+    "WidgetEmptyState",
+    "WidgetActionDescriptor",
+    "WidgetDiffSegment",
+    "WidgetDiffAnnotation",
+    "WidgetTimelineNode",
+    "WidgetCard",
+    "WidgetImageItem",
+    # Capability Mesh 错误层级
+    "KeystoneError",
+    "AuthError",
+    "TokenInvalid",
+    "TokenExpired",
+    "TokenAudienceMismatch",
+    "CapabilityPermissionError",
+    "CapabilityForbidden",
+    "ApprovalRequired",
+    "CapabilityDisabled",
+    "NotFoundError",
+    "CapabilityNotFound",
+    "TaskNotFound",
+    "CapabilityValidationError",
+    "InvalidArgs",
+    "ManifestMismatch",
+    "DependencyError",
+    "CapabilityUnavailable",
+    "LoopDetected",
+    "GuardrailBlocked",
+    "ExecutionError",
+    "BackendError",
+    "Timeout",
+    "Cancelled",
+    "DispatcherRestarted",
+    "RateLimitError",
+    "CapabilityConcurrencyLimit",
+    "UserQuotaExceeded",
+    "AppQuotaExceeded",
+]

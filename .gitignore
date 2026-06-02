@@ -1,0 +1,53 @@
+# Binaries & build output
+bin/
+dist/
+build/
+/ks
+
+# conformance mock-tools / claimant 编译产物（go build 默认输出，名同所在目录）
+/conformance/config-schema/mock-tools/go-aad/go-aad
+/conformance/config-schema/mock-tools/go-decrypt/go-decrypt
+/conformance/config-schema/mock-tools/go-encrypt/go-encrypt
+/conformance/config-schema/mock-tools/go-fingerprint/go-fingerprint
+/conformance/config-schema/mock-tools/go-keygen/go-keygen
+/conformance/config-schema/mock-tools/go-showwhen/go-showwhen
+/sdk/go/conformance-claimant/conformance-claimant
+
+# Node / Bun
+node_modules/
+
+# Test & coverage
+*.test
+coverage.out
+coverage.html
+.coverage
+.coverage.*
+htmlcov/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Env / secrets
+.env
+.env.local
+
+# IDE / editors
+.idea/
+.vscode/
+*.swp
+
+# macOS
+.DS_Store
+
+# Git worktrees
+.worktrees/
+
+# 本地草稿 / 规划目录（不入库）
+docs/superpowers/

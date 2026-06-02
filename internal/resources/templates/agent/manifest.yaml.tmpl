@@ -1,0 +1,45 @@
+# {{.AppID}} — Keystone agent（平台内角色助手，runtime none、无独立进程）。
+# 纯 agent 只调别人的能力；若你还要【对外供给能力】，应改用 type: app。
+# 字段含义 / 怎么选见 docs/decision-guide.md + docs/best-practices.md。
+# yaml-language-server: $schema=.ks/manifest.schema.json
+id: {{.AppID}}
+name: {{.Name}}
+version: 0.1.0
+type: agent
+summary: {{.Summary}}
+description: |
+  {{.Summary}}——这个岗位助手做什么、服务谁。
+publisher: "{{.Publisher}}"
+category: 研发工程
+tags: []
+runtime:
+  mode: none
+store:
+  audience:
+    - 业务用户
+  highlights:
+    - 安装后创建一个可对话的岗位助手
+  try_prompts:
+    - 让示例助手帮我分析这个需求
+task_templates:
+  - name: 示例任务
+    description: 收集目标、约束与已有材料，输出结构化建议。
+    icon: Bot
+    category: 研发工程
+    input_schema:
+      type: object
+      properties:
+        goal:
+          type: string
+          title: 目标
+      required:
+        - goal
+mount:
+  agent:
+    create_agent: true
+    name: {{.Name}}
+    # profile：岗位画像（display_name + 一段 description；语义召回素材 aliases/use_cases 等
+    # 由 LLM 从 description 生成草稿、作者审核，别手凑）。
+    profile:
+      display_name: {{.Name}}
+      description: 示例岗位助手，演示 agent 类型。

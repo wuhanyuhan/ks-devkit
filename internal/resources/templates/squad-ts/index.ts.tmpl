@@ -1,0 +1,19 @@
+import { createApp } from "@wuhanyuhan/ks-app";
+
+// auth: "keystone_jwks" secure-by-default；manifestPath 读 provides 做四象限 wiring。
+const app = createApp({
+  id: "{{.AppID}}",
+  version: "0.1.0",
+  auth: "keystone_jwks",
+  manifestPath: "manifest.yaml",
+});
+
+// handle_request 是团队【前门能力】（裸名，与 manifest provides[].name 一致）。
+// 你的 LLM 负责人在 handler 内编排专家、派活、汇总——这部分是 squad 进程的自有逻辑。
+app.registerCapability("handle_request", async (ctx, args) => {
+  const request = (args.request as string) || "";
+  // ctx.userId / ctx.callerId / ctx.chainId 透传发起方上下文（API 面 camelCase）。
+  return { result: `已受理：${request}` };
+});
+
+await app.run();

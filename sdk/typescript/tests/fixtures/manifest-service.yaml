@@ -1,0 +1,7 @@
+id: test-service
+name: "Test Service"
+type: service
+version: "1.0.0"
+mount:
+  service:
+    auth_mode: keystone_jwks

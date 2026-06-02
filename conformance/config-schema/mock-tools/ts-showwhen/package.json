@@ -1,0 +1,10 @@
+{
+  "name": "ks-conf-ts-showwhen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Conformance mock-tool: show_when DSL compile, TS side",
+  "scripts": {
+    "start": "bun run index.ts"
+  }
+}

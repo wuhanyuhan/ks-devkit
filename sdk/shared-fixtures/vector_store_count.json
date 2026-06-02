@@ -1,0 +1,11 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/mcp/relay/vector_store/count",
+    "body": {
+      "collection": "documents",
+      "filter": {"doc_id": "doc1"}
+    }
+  },
+  "response": {"count": 1}
+}

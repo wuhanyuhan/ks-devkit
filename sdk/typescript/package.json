@@ -1,0 +1,61 @@
+{
+  "name": "@wuhanyuhan/ks-app",
+  "version": "0.5.0",
+  "description": "Keystone MCP service SDK for TypeScript/Bun",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "require": "./dist/types.cjs"
+    }
+  },
+  "files": ["dist", "README.md", "CHANGELOG.md"],
+  "engines": {
+    "bun": ">=1.2",
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test:bun": "bun test ./src/ ./tests/",
+    "test:node": "vitest run src/ tests/",
+    "test": "bun run test:bun && bun run test:node",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
+  },
+  "peerDependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.24.0"
+  },
+  "dependencies": {
+    "hono": "^4.6.0",
+    "jose": "^6.0.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.13.0",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@types/bun": "^1.2.0",
+    "@types/node": "^20.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.8.0",
+    "vitest": "^4.1.0",
+    "zod": "^3.24.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wuhanyuhan/ks-devkit.git",
+    "directory": "sdk/typescript"
+  },
+  "license": "MIT",
+  "keywords": ["keystone", "mcp", "sdk", "llm", "agent"]
+}

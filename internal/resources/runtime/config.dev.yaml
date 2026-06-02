@@ -1,0 +1,44 @@
+# Keystone 本地开发配置（ks dev 使用）
+# 数据库/Redis 地址使用 Docker 服务名
+
+app_name: "Keystone Dev"
+server_port: 9988
+log_level: "DEBUG"
+
+database:
+  host: "mysql"
+  port: 3306
+  user: "root"
+  password: "keystone_dev"
+  name: "keystone"
+  pool_size: 5
+
+jwt:
+  private_key_path: "data/jwt_rsa_private.pem"
+  public_key_path: "data/jwt_rsa_public.pem"
+  access_token_expire_minutes: 720
+  refresh_token_expire_days: 30
+
+redis:
+  url: "redis://redis:6379/0"
+
+gateway:
+  max_tool_rounds: 10
+  tool_timeout_seconds: 30
+  default_max_context_tokens: 8000
+
+mcp:
+  pool_max_connections_per_server: 5
+  tool_cache_ttl_seconds: 300
+  connection_timeout_seconds: 10
+
+scheduler:
+  enabled: true
+  max_concurrent_executions: 3
+  execution_timeout: 300
+  misfire_grace_time: 60
+
+file:
+  storage_type: local
+  local_storage_dir: /data/files
+  max_upload_size_mb: 50

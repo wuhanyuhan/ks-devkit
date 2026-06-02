@@ -1,0 +1,9 @@
+{
+  "name": "ks-devkit-monorepo",
+  "private": true,
+  "workspaces": [
+    "sdk/typescript",
+    "sdk/typescript/conformance-claimant",
+    "sdk/typescript/squad-widget-sdk"
+  ]
+}

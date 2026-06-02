@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/mcp/relay/embeddings",
+    "body": {
+      "model": "bge-m3",
+      "input": ["hello"],
+      "encoding_format": "dense+sparse"
+    }
+  },
+  "response": {
+    "object": "list",
+    "model": "bge-m3",
+    "data": [
+      {"object": "embedding", "index": 0, "embedding": [0.1, 0.2], "sparse_embedding": {"100": 0.5, "7": 0.25}}
+    ],
+    "usage": {"prompt_tokens": 2, "total_tokens": 2}
+  }
+}

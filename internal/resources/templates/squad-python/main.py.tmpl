@@ -1,0 +1,22 @@
+from ks_app import App, CapabilityContext
+
+# keystone_auth=True：secure-by-default 入站校验。manifest_path：读 provides 做四象限 wiring。
+app = App(
+    id="{{.AppID}}",
+    keystone_auth=True,
+    version="0.1.0",
+    manifest_path="manifest.yaml",
+)
+
+
+# handle_request 是团队【前门能力】（裸名，与 manifest provides[].name 一致）。
+# 你的 LLM 负责人在 handler 内编排专家、派活、汇总——这部分是 squad 进程的自有逻辑。
+@app.capability("handle_request")
+async def handle_request(ctx: CapabilityContext, args: dict) -> dict:
+    request = args.get("request") or ""
+    # long_running：用 await ctx.progress(...) 上报进度；ctx.user_id / ctx.chain_id 透传发起方上下文。
+    return {"result": f"已受理：{request}"}
+
+
+if __name__ == "__main__":
+    app.run()

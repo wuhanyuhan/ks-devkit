@@ -1,0 +1,11 @@
+id: ks-mcp-knowledge
+name: Knowledge
+version: 0.1.0
+type: app
+managed_resources:
+  mysql:
+    inject:
+      host: KS_DB_HOST
+  vector_store: {}
+auth:
+  mode: keystone_jwks

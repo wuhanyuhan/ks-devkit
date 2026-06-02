@@ -1,0 +1,15 @@
+# {{.Name}}
+
+Keystone **squad**（有 LLM 负责人编排的 agent 团队，外部 MCP service）。由 `ks init --type=squad --lang=go` 生成。
+
+## 本地开发
+
+```bash
+ks dev                        # 拉起本地 keystone（:9988）
+go mod tidy && go run .       # squad 跑在 :8080
+ks register                   # 把 manifest 注册进本地 keystone（能力网格联调）
+ks refresh-meta               # 改 manifest/代码后重新同步
+```
+
+团队前门能力 `handle_request` 是你对外的入口；负责人编排专家的逻辑写在 squad 进程里。
+怎么选 app/squad/agent/skill：见 [decision-guide](https://github.com/wuhanyuhan/ks-devkit/blob/master/docs/decision-guide.md) 与 [best-practices](https://github.com/wuhanyuhan/ks-devkit/blob/master/docs/best-practices.md)。

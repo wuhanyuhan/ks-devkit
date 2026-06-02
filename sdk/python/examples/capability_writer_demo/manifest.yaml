@@ -1,0 +1,42 @@
+# SDK examples/capability_writer_demo
+# 演示 ks-app-sdk v0.6.0 的 capability mesh 能力：
+#   - capability 1（mcp_tool backend）：list_articles —— sync 列表查询
+#   - capability 2（http_endpoint backend）：create_article —— long_running 创作
+
+apiVersion: keystone/v1
+kind: Application
+metadata:
+  name: ks-mcp-writer-demo
+  version: 0.1.0
+
+provides:
+  capabilities:
+    - name: list_articles
+      display_name: 列出文章
+      execution_mode: sync
+      timeout_ms: 5000
+      backend:
+        kind: mcp_tool
+        tool_name: list_articles
+      intent_summary: 查询当前用户的文章列表
+      cost_hint: low
+      side_effect_level: readonly
+
+    - name: create_article
+      display_name: 生成文章
+      execution_mode: long_running
+      timeout_ms: 300000
+      backend:
+        kind: http_endpoint
+        path: /capabilities/create_article
+        method: POST
+      intent_summary: 写一篇关于指定主题的文章
+      cost_hint: high
+      side_effect_level: local_write
+      resumable: false
+
+requires:
+  capabilities:
+    - canonical_name: image-gen.generate
+      mode: optional
+      reason: 创作时若指定 generate_cover 则调本能力配封面

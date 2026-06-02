@@ -1,0 +1,117 @@
+name: KS Publish (callable)
+
+# Reusable workflow，供外部仓库通过 workflow_call 调用。
+#
+# 调用示例（在调用方仓库的 .github/workflows/publish.yml）：
+#   jobs:
+#     call-publish:
+#       uses: wuhanyuhan/ks-devkit/.github/workflows/publish-callable.yml@v1
+#       with:
+#         ref: ${{ github.ref }}
+#       secrets:
+#         KS_HUB_TOKEN: ${{ secrets.KS_HUB_TOKEN }}
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: true
+        description: '要 publish 的 git ref (例如 refs/heads/master 或 refs/tags/vX.Y.Z)'
+      ks-version:
+        type: string
+        default: 'latest'
+        description: 'ks-devkit 版本，默认 latest'
+      changelog:
+        type: string
+        default: ''
+        description: 'publish changelog (留空则用 manifest 的)'
+      dry-run:
+        type: boolean
+        default: false
+        description: '只跑 preflight + build，不上传'
+      no-wait:
+        type: boolean
+        default: false
+        description: 'fast-track 路径也不阻塞，立即返回'
+      wait-manual:
+        type: string
+        default: ''
+        description: 'manual 路径阻塞时长（如 30m），留空则立即退'
+    secrets:
+      KS_HUB_TOKEN:
+        required: true
+      GH_PRIVATE_PAT:
+        required: true
+        # 用于在 reusable workflow 内 gh release download 安装 ks-devkit binary：
+        # goreleaser artifact 名带版本号，用 PAT 走 gh release download 更稳。
+        # 推荐 caller 用 `secrets: inherit` 一并传 KS_HUB_TOKEN + GH_PRIVATE_PAT。
+    outputs:
+      exit_code:
+        description: 'ks publish exit code (0/1/2/3/4/5/6)'
+        value: ${{ jobs.publish.outputs.exit_code }}
+      review_path:
+        description: 'fast-track | manual'
+        value: ${{ jobs.publish.outputs.review_path }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    outputs:
+      exit_code: ${{ steps.publish.outputs.exit_code }}
+      review_path: ${{ steps.publish.outputs.review_path }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install ks-devkit
+        env:
+          GH_TOKEN: ${{ secrets.GH_PRIVATE_PAT }}
+        run: |
+          set -euo pipefail
+          KS_VER="${{ inputs.ks-version }}"
+          if [ "$KS_VER" = "latest" ]; then
+            KS_VER=$(gh release view -R wuhanyuhan/ks-devkit --json tagName -q .tagName)
+          fi
+          # goreleaser artifact 格式: ks_<X.Y.Z>_linux_amd64.tar.gz（tag 去 v 前缀）
+          KS_VER_NUM="${KS_VER#v}"
+          ARTIFACT="ks_${KS_VER_NUM}_linux_amd64.tar.gz"
+          mkdir -p /tmp/ks-dl
+          gh release download "$KS_VER" -R wuhanyuhan/ks-devkit -p "$ARTIFACT" -D /tmp/ks-dl
+          tar -xzf "/tmp/ks-dl/$ARTIFACT" -C /tmp/ks-dl
+          BINARY=$(find /tmp/ks-dl -maxdepth 2 -type f -name 'ks' | head -1)
+          if [ -z "$BINARY" ]; then
+            echo "::error::binary 'ks' not found in extracted archive"
+            ls -la /tmp/ks-dl
+            exit 1
+          fi
+          sudo mv "$BINARY" /usr/local/bin/ks
+          sudo chmod +x /usr/local/bin/ks
+          ks --version
+
+      - name: Publish
+        id: publish
+        continue-on-error: true
+        env:
+          KS_HUB_TOKEN: ${{ secrets.KS_HUB_TOKEN }}
+        run: |
+          set +e
+          FLAGS=""
+          [ -n "${{ inputs.changelog }}" ] && FLAGS="$FLAGS --changelog '${{ inputs.changelog }}'"
+          [ "${{ inputs.dry-run }}" = "true" ] && FLAGS="$FLAGS --dry-run"
+          [ "${{ inputs.no-wait }}" = "true" ] && FLAGS="$FLAGS --no-wait"
+          [ -n "${{ inputs.wait-manual }}" ] && FLAGS="$FLAGS --wait-manual=${{ inputs.wait-manual }}"
+
+          # 用 eval 处理 changelog 单引号；避免直接 $FLAGS 触发 shell 字段拆分问题
+          eval "ks publish $FLAGS --json" 2>&1 | tee publish.out
+          EXIT=${PIPESTATUS[0]}
+          echo "exit_code=$EXIT" >> $GITHUB_OUTPUT
+
+          REVIEW_PATH=$(tail -1 publish.out | jq -r '.review_path // ""' 2>/dev/null || echo "")
+          echo "review_path=$REVIEW_PATH" >> $GITHUB_OUTPUT
+          exit $EXIT
+
+      - name: Fail with original exit code
+        if: steps.publish.outputs.exit_code != '0'
+        run: exit ${{ steps.publish.outputs.exit_code }}

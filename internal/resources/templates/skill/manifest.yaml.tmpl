@@ -1,0 +1,23 @@
+# {{.AppID}} — Keystone skill（技能资源，挂载形态、被语义召回后调用）。
+# 字段含义 / 怎么选见 docs/decision-guide.md + docs/best-practices.md。
+# yaml-language-server: $schema=.ks/manifest.schema.json
+id: {{.AppID}}
+name: {{.Name}}
+version: 0.1.0
+type: skill
+summary: {{.Summary}}
+description: |
+  {{.Summary}}——这个技能解决什么问题、何时被召回。
+publisher: "{{.Publisher}}"
+category: 研发工程
+tags: []
+runtime:
+  mode: none
+store:
+  audience:
+    - 业务用户
+  highlights:
+    - 一个可被召回复用的技能
+mount:
+  skill:
+    name: {{.Name}}

@@ -1,0 +1,11 @@
+id: ks-mcp-database
+name: Database
+version: 0.1.0
+type: app
+provides:
+  capabilities:
+    - name: run_query
+      display_name: 执行查询
+      execution_mode: sync
+      side_effect_level: none
+      description: 在已连接的数据源上执行只读 SQL 查询并返回结果集

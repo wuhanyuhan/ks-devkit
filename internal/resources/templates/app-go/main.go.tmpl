@@ -1,0 +1,31 @@
+package main
+
+import (
+	"github.com/wuhanyuhan/ks-devkit/sdk/go/ksapp"
+)
+
+func main() {
+	// WithKeystoneAuth：secure-by-default 入站校验。WithManifest：读 provides 做四象限 wiring。
+	app := ksapp.New("{{.AppID}}",
+		ksapp.WithManifest("manifest.yaml"),
+		ksapp.WithKeystoneAuth(),
+		ksapp.WithVersion("0.1.0"),
+	)
+
+	// RegisterCapability 收【裸名】（与 manifest provides[].name 一致），canonical 由平台派生。
+	// Run() 内 finalize 触发复用四象限：有 handler + 无同名 tool → 生成 MCP tool；
+	// 无 handler + 命中同名 app.Tool → 复用；声明了却既无 handler 也无同名 tool → 启动期报错（orphan→error）。
+	app.RegisterCapability("hello",
+		func(ctx ksapp.CapabilityContext, args map[string]any) (any, error) {
+			name, _ := args["name"].(string)
+			if name == "" {
+				name = "world"
+			}
+			// ctx 透传发起方上下文：ctx.UserID() / ctx.CallerID() / ctx.ChainID()；
+			// 调下游（HTTP/DB/SDK）时透传 ctx.Context()，让超时/取消能贯穿调用链。
+			return map[string]any{"message": "Hello, " + name + "!"}, nil
+		},
+	)
+
+	app.Run()
+}

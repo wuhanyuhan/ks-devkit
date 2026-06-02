@@ -1,0 +1,18 @@
+id: backend-engineer
+name: 后端工程师
+version: 0.1.0
+type: assistant
+runtime:
+  mode: none
+mount:
+  assistant:
+    create_agent: true
+    name: 后端工程师
+    profile:
+      canonical_name: agent.backend-engineer
+      display_name: 后端工程师
+      intent_summary: 后端开发助手
+      natural_description: 协助后端架构、API 设计与排障
+      input_nl: 需求描述
+      output_nl: 建议
+      user_utterances: ["帮我设计接口"]

@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/mcp/relay/vector_store/upsert",
+    "body": {
+      "collection": "documents",
+      "points": [
+        {"id": "doc1", "dense": [0.1, 0.2], "sparse": {"100": 0.5}, "payload": {"doc_id": "doc1"}}
+      ]
+    }
+  },
+  "response": {"status": "ok", "upserted": 1}
+}

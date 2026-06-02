@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/mcp/relay/vector_store/search_text",
+    "body": {
+      "collection": "documents",
+      "text": "hello",
+      "top_k": 5
+    }
+  },
+  "response": {
+    "results": [
+      {"id": "doc1", "score": 0.91, "payload": {"doc_id": "doc1"}}
+    ]
+  }
+}

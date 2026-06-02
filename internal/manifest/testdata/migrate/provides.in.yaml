@@ -1,0 +1,19 @@
+id: ks-mcp-database
+name: Database
+version: 0.1.0
+type: service
+provides:
+  capabilities:
+    - canonical_name: ks-mcp-database.run_query
+      display_name: 执行查询
+      execution_mode: sync
+      cost_hint: light
+      side_effect_level: none
+      allowed_callers:
+        apps: ["*"]
+      default_grant:
+        roles: ["admin", "user"]
+      intent_summary: 执行只读 SQL
+      natural_description: 在已连接的数据源上执行只读 SQL 查询并返回结果集
+      input_nl: SQL 字符串
+      output_nl: 结果集

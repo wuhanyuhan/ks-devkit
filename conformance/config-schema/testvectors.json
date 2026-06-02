@@ -1,0 +1,339 @@
+{
+  "version": 1,
+  "aad_canonical": [
+    {
+      "name": "basic_ascii_id",
+      "description": "ASCII ID + version=2，基础样板",
+      "mcp_server_id": "ks-mcp-image-gen",
+      "config_version": 2,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 10 6b 73 2d 6d 63 70 2d 69 6d 61 67 65 2d 67 65 6e 00 00 00 00 00 00 00 02 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    },
+    {
+      "name": "short_id",
+      "description": "单字节 ID（最小长度边界）+ version=0",
+      "mcp_server_id": "a",
+      "config_version": 0,
+      "fingerprint": "6668:7aad:f862:bd77:6c8f:c18b:8e9f:8e20",
+      "expected_bytes_hex": "00 01 61 00 00 00 00 00 00 00 00 00 27 36 36 36 38 3a 37 61 61 64 3a 66 38 36 32 3a 62 64 37 37 3a 36 63 38 66 3a 63 31 38 62 3a 38 65 39 66 3a 38 65 32 30"
+    },
+    {
+      "name": "utf8_chinese_id",
+      "description": "含中文字符的 UTF-8 ID（ks-mcp-测试，13 字节）",
+      "mcp_server_id": "ks-mcp-测试",
+      "config_version": 1,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 0d 6b 73 2d 6d 63 70 2d e6 b5 8b e8 af 95 00 00 00 00 00 00 00 01 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    },
+    {
+      "name": "max_length_id",
+      "description": "255 字节 ASCII ID（最大长度边界）：'a' × 255",
+      "mcp_server_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "config_version": 1,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 ff 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 61 00 00 00 00 00 00 00 01 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    },
+    {
+      "name": "version_zero",
+      "description": "config_version = 0（最小版本号）",
+      "mcp_server_id": "ks-mcp-test",
+      "config_version": 0,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 0b 6b 73 2d 6d 63 70 2d 74 65 73 74 00 00 00 00 00 00 00 00 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    },
+    {
+      "name": "version_max_int63",
+      "description": "config_version = 2^63-1 = 9223372036854775807（最大版本号边界）",
+      "mcp_server_id": "ks-mcp-test",
+      "config_version": 9223372036854775807,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 0b 6b 73 2d 6d 63 70 2d 74 65 73 74 7f ff ff ff ff ff ff ff 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    },
+    {
+      "name": "version_large",
+      "description": "config_version = 1000000000（普通大值）",
+      "mcp_server_id": "ks-mcp-test",
+      "config_version": 1000000000,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 0b 6b 73 2d 6d 63 70 2d 74 65 73 74 00 00 00 00 3b 9a ca 00 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    },
+    {
+      "name": "fingerprint_all_zeros",
+      "description": "fingerprint 全零（0000:0000:...），对应 all_zero_pubkey",
+      "mcp_server_id": "ks-mcp-test",
+      "config_version": 1,
+      "fingerprint": "6668:7aad:f862:bd77:6c8f:c18b:8e9f:8e20",
+      "expected_bytes_hex": "00 0b 6b 73 2d 6d 63 70 2d 74 65 73 74 00 00 00 00 00 00 00 01 00 27 36 36 36 38 3a 37 61 61 64 3a 66 38 36 32 3a 62 64 37 37 3a 36 63 38 66 3a 63 31 38 62 3a 38 65 39 66 3a 38 65 32 30"
+    },
+    {
+      "name": "fingerprint_all_f",
+      "description": "fingerprint 全 f 公钥（0xff×32）的指纹",
+      "mcp_server_id": "ks-mcp-test",
+      "config_version": 1,
+      "fingerprint": "af96:1376:0f72:635f:bdb4:4a5a:0a63:c39f",
+      "expected_bytes_hex": "00 0b 6b 73 2d 6d 63 70 2d 74 65 73 74 00 00 00 00 00 00 00 01 00 27 61 66 39 36 3a 31 33 37 36 3a 30 66 37 32 3a 36 33 35 66 3a 62 64 62 34 3a 34 61 35 61 3a 30 61 36 33 3a 63 33 39 66"
+    },
+    {
+      "name": "fingerprint_mixed",
+      "description": "混合 fingerprint ab12:cd34:...:def0",
+      "mcp_server_id": "ks-mcp-test",
+      "config_version": 1,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 0b 6b 73 2d 6d 63 70 2d 74 65 73 74 00 00 00 00 00 00 00 01 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    },
+    {
+      "name": "id_with_dash",
+      "description": "含连字符的 ID（ks-mcp-image-gen），version=5",
+      "mcp_server_id": "ks-mcp-image-gen",
+      "config_version": 5,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 10 6b 73 2d 6d 63 70 2d 69 6d 61 67 65 2d 67 65 6e 00 00 00 00 00 00 00 05 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    },
+    {
+      "name": "id_with_underscore",
+      "description": "含下划线的 ID（ks_mcp_test），version=3",
+      "mcp_server_id": "ks_mcp_test",
+      "config_version": 3,
+      "fingerprint": "ab12:cd34:ef56:7890:1234:5678:9abc:def0",
+      "expected_bytes_hex": "00 0b 6b 73 5f 6d 63 70 5f 74 65 73 74 00 00 00 00 00 00 00 03 00 27 61 62 31 32 3a 63 64 33 34 3a 65 66 35 36 3a 37 38 39 30 3a 31 32 33 34 3a 35 36 37 38 3a 39 61 62 63 3a 64 65 66 30"
+    }
+  ],
+  "show_when": [
+    {
+      "name": "simple_equality",
+      "description": "字段等值条件：backend == 'github'",
+      "dsl": "backend == 'github'",
+      "context": { "field_under_if": "github_token" },
+      "expected_json_schema": {
+        "if": { "properties": { "backend": { "const": "github" } } },
+        "then": { "required": ["github_token"] },
+        "else": { "properties": { "github_token": false } }
+      }
+    },
+    {
+      "name": "simple_inequality",
+      "description": "字段不等条件：type != 'github'",
+      "dsl": "type != 'github'",
+      "context": { "field_under_if": "base_url" },
+      "expected_json_schema": {
+        "if": { "properties": { "type": { "not": { "const": "github" } } } },
+        "then": { "required": ["base_url"] },
+        "else": { "properties": { "base_url": false } }
+      }
+    },
+    {
+      "name": "simple_in_list",
+      "description": "集合包含条件：region in ['cn','us','eu']",
+      "dsl": "region in ['cn','us','eu']",
+      "context": { "field_under_if": "icp_number" },
+      "expected_json_schema": {
+        "if": { "properties": { "region": { "enum": ["cn", "us", "eu"] } } },
+        "then": { "required": ["icp_number"] },
+        "else": { "properties": { "icp_number": false } }
+      }
+    },
+    {
+      "name": "and_two_conditions",
+      "description": "AND 组合：backend == 'github' && enabled == true",
+      "dsl": "backend == 'github' && enabled == true",
+      "context": { "field_under_if": "github_token" },
+      "expected_json_schema": {
+        "if": {
+          "allOf": [
+            { "properties": { "backend": { "const": "github" } } },
+            { "properties": { "enabled": { "const": true } } }
+          ]
+        },
+        "then": { "required": ["github_token"] },
+        "else": { "properties": { "github_token": false } }
+      }
+    },
+    {
+      "name": "or_two_conditions",
+      "description": "OR 组合：region == 'cn' || region == 'us'",
+      "dsl": "region == 'cn' || region == 'us'",
+      "context": { "field_under_if": "locale" },
+      "expected_json_schema": {
+        "if": {
+          "anyOf": [
+            { "properties": { "region": { "const": "cn" } } },
+            { "properties": { "region": { "const": "us" } } }
+          ]
+        },
+        "then": { "required": ["locale"] },
+        "else": { "properties": { "locale": false } }
+      }
+    },
+    {
+      "name": "and_or_mixed_precedence",
+      "description": "&& 优先级高于 ||：a == 'x' && b == 'y' || c == 'z' 等价 (a&&b)||c",
+      "dsl": "a == 'x' && b == 'y' || c == 'z'",
+      "context": { "field_under_if": "target_field" },
+      "expected_json_schema": {
+        "if": {
+          "anyOf": [
+            {
+              "allOf": [
+                { "properties": { "a": { "const": "x" } } },
+                { "properties": { "b": { "const": "y" } } }
+              ]
+            },
+            { "properties": { "c": { "const": "z" } } }
+          ]
+        },
+        "then": { "required": ["target_field"] },
+        "else": { "properties": { "target_field": false } }
+      }
+    },
+    {
+      "name": "number_literal",
+      "description": "数字字面量：max_retries == 3",
+      "dsl": "max_retries == 3",
+      "context": { "field_under_if": "retry_delay_ms" },
+      "expected_json_schema": {
+        "if": { "properties": { "max_retries": { "const": 3 } } },
+        "then": { "required": ["retry_delay_ms"] },
+        "else": { "properties": { "retry_delay_ms": false } }
+      }
+    },
+    {
+      "name": "boolean_literal",
+      "description": "布尔字面量：enabled == true",
+      "dsl": "enabled == true",
+      "context": { "field_under_if": "api_key" },
+      "expected_json_schema": {
+        "if": { "properties": { "enabled": { "const": true } } },
+        "then": { "required": ["api_key"] },
+        "else": { "properties": { "api_key": false } }
+      }
+    },
+    {
+      "name": "null_literal",
+      "description": "null 字面量：proxy == null",
+      "dsl": "proxy == null",
+      "context": { "field_under_if": "direct_url" },
+      "expected_json_schema": {
+        "if": { "properties": { "proxy": { "const": null } } },
+        "then": { "required": ["direct_url"] },
+        "else": { "properties": { "direct_url": false } }
+      }
+    },
+    {
+      "name": "string_with_hyphens",
+      "description": "含连字符的字符串值：backend == 'github-enterprise'",
+      "dsl": "backend == 'github-enterprise'",
+      "context": { "field_under_if": "enterprise_token" },
+      "expected_json_schema": {
+        "if": { "properties": { "backend": { "const": "github-enterprise" } } },
+        "then": { "required": ["enterprise_token"] },
+        "else": { "properties": { "enterprise_token": false } }
+      }
+    },
+    {
+      "name": "field_with_underscore",
+      "description": "含下划线的字段名：config_mode == 'advanced'",
+      "dsl": "config_mode == 'advanced'",
+      "context": { "field_under_if": "advanced_options" },
+      "expected_json_schema": {
+        "if": { "properties": { "config_mode": { "const": "advanced" } } },
+        "then": { "required": ["advanced_options"] },
+        "else": { "properties": { "advanced_options": false } }
+      }
+    },
+    {
+      "name": "array_item_show_when",
+      "description": "数组 item 内 show_when：type != 'github'（Spec A §3.4 数组场景）",
+      "dsl": "type != 'github'",
+      "context": {
+        "field_under_if": "base_url",
+        "array_context": true,
+        "array_field": "backends"
+      },
+      "expected_json_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "allOf": [
+            {
+              "if": { "properties": { "type": { "not": { "const": "github" } } } },
+              "then": { "required": ["base_url"] },
+              "else": { "properties": { "base_url": false } }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "reject_parenthesis",
+      "description": "拒绝：括号嵌套 (a || b) && c（MVP 不支持括号）",
+      "dsl": "(a || b) && c",
+      "should_reject": true,
+      "reject_reason": "parenthesis_not_supported"
+    },
+    {
+      "name": "reject_cross_level",
+      "description": "拒绝：跨 level 字段引用 parent.field == 'x'",
+      "dsl": "parent.field == 'x'",
+      "should_reject": true,
+      "reject_reason": "cross_level_reference_not_supported"
+    },
+    {
+      "name": "reject_arithmetic",
+      "description": "拒绝：算术运算 x + 1 == 2",
+      "dsl": "x + 1 == 2",
+      "should_reject": true,
+      "reject_reason": "arithmetic_not_supported"
+    }
+  ],
+  "fingerprint": [
+    {
+      "name": "all_zero_pubkey",
+      "description": "32 字节全零公钥",
+      "pubkey_hex": "0000000000000000000000000000000000000000000000000000000000000000",
+      "expected_fingerprint": "6668:7aad:f862:bd77:6c8f:c18b:8e9f:8e20"
+    },
+    {
+      "name": "all_f_pubkey",
+      "description": "32 字节全 0xff 公钥",
+      "pubkey_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "expected_fingerprint": "af96:1376:0f72:635f:bdb4:4a5a:0a63:c39f"
+    },
+    {
+      "name": "seq_0_to_31",
+      "description": "字节值顺序 0x00 0x01 ... 0x1f",
+      "pubkey_hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "expected_fingerprint": "630d:cd29:66c4:3366:9112:5448:bbb2:5b4f"
+    },
+    {
+      "name": "random_a",
+      "description": "固定随机值 a：前 16 字节 0xaa，后 16 字节 0xbb",
+      "pubkey_hex": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "expected_fingerprint": "43de:3f42:d8de:0da8:1a6c:6c58:fcd8:b6e0"
+    },
+    {
+      "name": "random_b",
+      "description": "固定随机值 b：seed {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88} 循环填充",
+      "pubkey_hex": "1122334455667788112233445566778811223344556677881122334455667788",
+      "expected_fingerprint": "0a9d:0521:4a31:a8a0:5c65:5772:1e43:c612"
+    },
+    {
+      "name": "random_c",
+      "description": "固定随机值 c：{0xde,0xad,0xbe,0xef} 循环填充",
+      "pubkey_hex": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
+      "expected_fingerprint": "8200:cf0c:e114:47bf:6353:cbac:964d:07d1"
+    },
+    {
+      "name": "ed25519_like_a",
+      "description": "伪 ed25519 格式公钥：字节 0x12 ~ 0x31 递增",
+      "pubkey_hex": "12131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f3031",
+      "expected_fingerprint": "8b5e:ca91:13ac:f14f:e172:7346:4c4c:a4bf"
+    },
+    {
+      "name": "real_x25519_derived",
+      "description": "真实 X25519 推导：私钥 = 0x01 × 32，via crypto/ecdh Go 1.24+",
+      "privkey_note": "priv = bytes.Repeat([]byte{0x01}, 32)，通过 ecdh.X25519().NewPrivateKey() 推导",
+      "pubkey_hex": "a4e09292b651c278b9772c569f5fa9bb13d906b46ab68c9df9dc2b4409f8a209",
+      "expected_fingerprint": "1a92:f238:52dc:908d:9731:6a3b:1357:8281"
+    }
+  ]
+}

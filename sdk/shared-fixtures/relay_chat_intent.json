@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/mcp/relay/chat/completions",
+    "body": {
+      "messages": [{"role": "user", "content": "hi"}],
+      "request_options": {"tier": "flagship", "vision_required": true, "reasoning_mode": "on"}
+    }
+  },
+  "response": {
+    "choices": [{"index": 0, "message": {"role": "assistant", "content": "ok"}, "finish_reason": "stop"}],
+    "usage": {"prompt_tokens": 1, "completion_tokens": 1}
+  }
+}

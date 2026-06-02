@@ -1,0 +1,20 @@
+import { createApp } from "@wuhanyuhan/ks-app";
+
+// auth: "keystone_jwks" secure-by-default；manifestPath 读 provides 做四象限 wiring。
+// 本地裸跑：export KS_APP_AUTH_MODE=insecure；生产由平台注入 KEYSTONE_JWKS_URL。
+const app = createApp({
+  id: "{{.AppID}}",
+  version: "0.1.0",
+  auth: "keystone_jwks",
+  manifestPath: "manifest.yaml",
+});
+
+// registerCapability 收【裸名】（与 manifest provides[].name 一致），canonical 由平台派生。
+// run() 内 finalize 触发复用四象限（生成/复用/冲突/orphan→error，同 Go/Python）。
+app.registerCapability("hello", async (ctx, args) => {
+  const name = (args.name as string) || "world";
+  // ctx 透传发起方上下文：ctx.userId / ctx.callerId / ctx.chainId（API 面 camelCase）。
+  return { message: `Hello, ${name}!` };
+});
+
+await app.run();

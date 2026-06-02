@@ -1,0 +1,23 @@
+from ks_app import App, CapabilityContext
+
+# keystone_auth=True：secure-by-default 入站校验。manifest_path：读 provides 做四象限 wiring。
+# 本地裸跑：export KS_APP_AUTH_MODE=insecure；生产由平台注入 KEYSTONE_JWKS_URL。
+app = App(
+    id="{{.AppID}}",
+    keystone_auth=True,
+    version="0.1.0",
+    manifest_path="manifest.yaml",
+)
+
+
+# @app.capability 收【裸名】（与 manifest provides[].name 一致），canonical 由平台派生。
+# run() 内 finalize 触发复用四象限（生成/复用/冲突/orphan→error，同 Go）。
+@app.capability("hello")
+async def hello(ctx: CapabilityContext, args: dict) -> dict:
+    name = args.get("name") or "world"
+    # ctx 透传发起方上下文：ctx.user_id / ctx.caller_id / ctx.chain_id。
+    return {"message": f"Hello, {name}!"}
+
+
+if __name__ == "__main__":
+    app.run()

@@ -1,0 +1,49 @@
+name: Publish TypeScript SDK to npm
+
+on:
+  push:
+    tags:
+      - "sdk/typescript/v*"
+
+permissions:
+  contents: read
+  id-token: write  # 让 npm CLI 可以从 GitHub 拿 OIDC token 与 npm registry 交换短期 publish 凭证
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # Node 24 自带 npm 11.5+，原生支持 OIDC Trusted Publishing
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Print npm version (must be >= 11.5.1 for OIDC)
+        run: npm --version
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+        working-directory: sdk/typescript
+
+      - name: Lint (tsc --noEmit)
+        run: bun run lint
+        working-directory: sdk/typescript
+
+      - name: Test (bun + vitest)
+        run: bun run test
+        working-directory: sdk/typescript
+
+      - name: Build (tsup)
+        run: bun run build
+        working-directory: sdk/typescript
+
+      - name: Publish to npm (OIDC trusted publishing)
+        run: npm publish --access public
+        working-directory: sdk/typescript

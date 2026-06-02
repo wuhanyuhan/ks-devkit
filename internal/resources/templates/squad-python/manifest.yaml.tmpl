@@ -1,0 +1,79 @@
+# {{.AppID}} — Keystone squad（type: squad，外部 MCP service）
+# 由 `ks init {{.AppID}} --type=squad --lang=go` 生成。
+# squad = 有 LLM 负责人编排的 agent 团队；keystone 视作单一"团队前门"黑盒。
+# 字段含义 / 最佳实践见 docs/decision-guide.md + docs/best-practices.md。
+# yaml-language-server: $schema=.ks/manifest.schema.json
+id: {{.AppID}}
+name: {{.Name}}
+version: 0.1.0
+type: squad
+summary: {{.Summary}}
+description: |
+  {{.Summary}}——一句话说清这支团队做什么、给谁用（写真话，别堆砌关键词）。
+publisher: "{{.Publisher}}"
+category: ""
+tags: []
+
+compatibility:
+  keystone: ">=1.0.0"
+
+# 鉴权 secure-by-default：keystone 出站签短期 JWT、squad 入站用 SDK 校验。
+auth:
+  mode: keystone_jwks
+
+runtime:
+  mode: container
+  # 容器内固定监听 8080（无需也不要声明端口字段）。
+  health_check: /healthz
+  health_check_url: "http://localhost:8080/mcp"
+  image: "{{.AppID}}:0.1.0"
+  resources:
+    cpu: "0.5"
+    memory: "256Mi"
+
+# store.team：团队名册仅作 Store 信任展示，不与运行时建契约绑定；编排逻辑全在你的 squad 进程里。
+# type: squad 自动派生 store.presentation: expert_team（派生字段别手写），expert_team 必填名册。
+store:
+  audience:
+    - 业务用户
+  highlights:
+    - 一支可托付的专家团队
+  team:
+    lead_role: 负责人
+    members:
+      - key: expert
+        name: 示例专家
+        title: 专家
+
+# provides：squad 通常对外供一个 long_running 的【前门能力】，由你的 LLM 负责人接住后派活。
+# 作者写【裸名】name，全局 canonical=<app_id>.<name> 由平台派生（别写前缀）。
+provides:
+  capabilities:
+    - name: handle_request
+      display_name: 团队受理
+      description: 团队前门——接住用户请求，由负责人编排专家完成。
+      execution_mode: long_running         # 团队任务通常 long_running
+      side_effect_level: soft_reversible
+      backend:
+        kind: mcp_tool
+        tool_name: handle_request
+      timeout_ms: 300000
+      input_schema:
+        type: object
+        properties:
+          request:
+            type: string
+            description: 用户请求
+      output_schema:
+        type: object
+        properties:
+          result:
+            type: string
+
+permissions:
+  # 最小权限：只声明你实际用到的维度（none=不申请）。filesystem/user_context 是高风险维度
+  # （ks test 会重点标注），用到再加（如 filesystem.level: read_scoped）。
+  network:
+    level: none        # none | restricted | unrestricted
+  llm:
+    level: none        # none | host_proxy | self_managed

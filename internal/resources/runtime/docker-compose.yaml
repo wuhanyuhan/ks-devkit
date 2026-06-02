@@ -1,0 +1,91 @@
+# ks-devkit 本地开发环境
+# 使用方式: cd runtime && docker compose up -d
+# 或通过: ks dev
+#
+# 服务:
+#   db-init      — 从 keystone-dev 镜像提取 schema.sql（init 容器，运行后退出）
+#   keystone-dev — Keystone 实例（预构建镜像），端口 9988
+#   mysql        — MySQL 8.0，端口 3306
+#   redis        — Redis 7，端口 6379
+
+services:
+  db-init:
+    image: ghcr.io/wuhanyuhan/keystone-dev:0.3.0
+    restart: "no"
+    entrypoint: >
+      sh -c "sed 's/allowed_tools  TEXT /allowed_tools  VARCHAR(2000) /' /app/schema.sql > /initdb/01-schema.sql &&
+             cp /seed/seed.sql /initdb/02-seed.sql"
+    volumes:
+      - db_initdb:/initdb
+      - ./seed/seed.sql:/seed/seed.sql:ro
+
+  # 注意：0.3.0 镜像不带 clean-break 注册语义（去前缀派生 / decision_mode→guardrail /
+  # 能力网格注册）。待发布带 clean-break 注册语义的 keystone-dev 镜像后，把本服务与
+  # 上面 db-init 的 image tag 一并 bump 到该版本，ks register/refresh-meta 的能力网格
+  # 注册才在本地 e2e 生效（同时启用 internal/cmd/register_e2e_test.go 的
+  # KS_E2E_KEYSTONE=1 真机验证）。
+  keystone-dev:
+    image: ghcr.io/wuhanyuhan/keystone-dev:0.3.0
+    ports:
+      - "9988:9988"
+    environment:
+      - TZ=Asia/Shanghai
+      - KS_DEV_MODE=true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./config.dev.yaml:/app/config/config.env.yaml:ro
+      - keystone_data:/data
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9988/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mysql:
+    image: mysql:8.0
+    command:
+      - '--character-set-server=utf8mb4'
+      - '--collation-server=utf8mb4_unicode_ci'
+      - '--sql-mode=ONLY_FULL_GROUP_BY,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'
+    environment:
+      MYSQL_ROOT_PASSWORD: keystone_dev
+      MYSQL_DATABASE: keystone
+    ports:
+      - "3306:3306"
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - db_initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--maxmemory", "256mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  keystone_data:
+  mysql_data:
+  redis_data:
+  db_initdb:

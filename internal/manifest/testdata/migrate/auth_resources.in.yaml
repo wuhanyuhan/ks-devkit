@@ -1,0 +1,17 @@
+id: ks-mcp-knowledge
+name: Knowledge
+version: 0.1.0
+type: service
+mount:
+  service:
+    auth_mode: keystone_jwks
+managed_resources:
+  mysql:
+    required: true
+    database: auto
+    user: auto
+    inject:
+      host: KS_DB_HOST
+  vector_store:
+    required: true
+    collection_prefix: auto

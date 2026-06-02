@@ -1,0 +1,35 @@
+name: docs-lint
+
+on:
+  pull_request:
+    paths:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'AGENTS.md'
+      - 'docs/**'
+      - 'sdk/go/README.md'
+      - 'sdk/python/README.md'
+      - 'sdk/typescript/README.md'
+      - 'internal/resources/templates/**'
+      - 'conformance/docs-lint/**'
+  push:
+    branches: [master]
+    paths:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'AGENTS.md'
+      - 'docs/**'
+      - 'sdk/go/README.md'
+      - 'sdk/python/README.md'
+      - 'sdk/typescript/README.md'
+      - 'internal/resources/templates/**'
+      - 'conformance/docs-lint/**'
+
+jobs:
+  docs-lint:
+    name: Docs drift lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Run docs-lint
+        run: bash conformance/docs-lint/run.sh

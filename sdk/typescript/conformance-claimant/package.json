@@ -1,0 +1,14 @@
+{
+  "name": "ks-app-ts-conformance-claimant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "PORT=9971 bun run main.ts"
+  },
+  "dependencies": {
+    "@wuhanyuhan/ks-app": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.24.0"
+  }
+}

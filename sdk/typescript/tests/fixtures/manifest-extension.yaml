@@ -1,0 +1,10 @@
+id: test-extension
+name: "Test Extension"
+type: extension
+version: "2.0.0"
+mount:
+  extension:
+    mcp_server_name: "test-ext"
+    transport_type: streamable_http
+    endpoint: "http://localhost:9991/mcp"
+    auth_mode: none

@@ -1,0 +1,5 @@
+id: demo-app
+name: Demo
+version: 0.1.0
+type: service
+summary: 一个示例

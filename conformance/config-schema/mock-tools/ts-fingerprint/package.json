@@ -1,0 +1,10 @@
+{
+  "name": "ks-conf-ts-fingerprint",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Conformance mock-tool: X25519 pubkey fingerprint, TS side",
+  "scripts": {
+    "start": "bun run index.ts"
+  }
+}

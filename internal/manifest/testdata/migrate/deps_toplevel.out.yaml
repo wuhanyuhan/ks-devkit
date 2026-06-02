@@ -1,0 +1,10 @@
+id: ks-mcp-squad-marketing
+name: Marketing Squad
+version: 0.1.0
+type: squad
+runtime:
+  mode: container
+conflicts:
+  apps:
+    - id: ks-mcp-old-marketing
+      reason: 功能重叠

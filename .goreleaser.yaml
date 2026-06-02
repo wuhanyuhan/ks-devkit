@@ -1,0 +1,45 @@
+version: 2
+project_name: ks
+
+builds:
+  - id: ks
+    main: ./cmd/ks
+    binary: ks
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: ks
+    ids: [ks]
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "ks_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+brews:
+  - repository:
+      owner: wuhanyuhan
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/wuhanyuhan/ks-devkit
+    description: Keystone 开放生态平台开发者工具链
+    license: MIT
+    install: |
+      bin.install "ks"
+    test: |
+      system "#{bin}/ks", "--version"
+
+changelog:
+  sort: asc

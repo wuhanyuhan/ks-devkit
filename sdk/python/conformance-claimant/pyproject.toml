@@ -1,0 +1,13 @@
+[project]
+name = "conformance-claimant"
+version = "1.0.0"
+description = "ks_app SDK conformance claimant (Claims: conformance-v1.0.0)"
+requires-python = ">=3.11"
+
+# 用本地 editable 引用 sdk/python 主包
+dependencies = [
+    "ks-app-sdk",
+]
+
+[tool.uv.sources]
+ks-app-sdk = { path = "..", editable = true }

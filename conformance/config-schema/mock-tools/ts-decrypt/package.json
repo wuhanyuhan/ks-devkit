@@ -1,0 +1,13 @@
+{
+  "name": "ks-conf-ts-decrypt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Conformance mock-tool: X25519 + AES-GCM decrypt, TS side",
+  "scripts": {
+    "start": "bun run index.ts"
+  },
+  "dependencies": {
+    "@noble/curves": "^2.2.0"
+  }
+}

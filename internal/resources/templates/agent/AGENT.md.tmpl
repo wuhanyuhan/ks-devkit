@@ -1,0 +1,10 @@
+# {{.Name}}（agent）
+
+平台内角色助手，运行在 keystone 内（`runtime.mode: none`），自身不跑 server、只调能力网格里别人的能力。
+
+## 怎么判断该用 agent 还是 app？
+
+- 只在平台内做角色化对话、调别人的能力 → **agent**（本模板）。
+- 还要【对外供给可被调用的能力】→ 改用 `ks init --type=app`。
+
+详见 [decision-guide](https://github.com/wuhanyuhan/ks-devkit/blob/master/docs/decision-guide.md)。

@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"app_id": "ks-mcp-browser", "name": "web_search", "canonical": "ks-mcp-browser.web_search"},
+    {"app_id": "translator", "name": "translate", "canonical": "translator.translate"},
+    {"app_id": "ks-mcp-image-gen", "name": "generate", "canonical": "ks-mcp-image-gen.generate"}
+  ]
+}

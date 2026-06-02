@@ -1,0 +1,990 @@
+{
+  "$defs": {
+    "AgentMountSpec": {
+      "properties": {
+        "create_agent": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/$defs/CapabilityProfileSpec"
+        },
+        "system_prompt": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "AppSpec": {
+      "properties": {
+        "auth": {
+          "$ref": "#/$defs/AuthSpec",
+          "description": "Auth app 级鉴权契约（顶层 auth 段）。详见 AuthSpec。"
+        },
+        "author": {
+          "description": "Author 应用作者标识（人或组织名）。Publisher 是发布主体（必为 ks-hub publisher），Author 可独立标注开发者署名。",
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "changelog": {
+          "description": "Changelog 当前版本的 changelog markdown，由 publish 流程从 CHANGELOG.md 抽取 或开发者直接在 manifest 内填写。Store 详情页直接渲染。",
+          "type": "string"
+        },
+        "compatibility": {
+          "$ref": "#/$defs/CompatibilitySpec",
+          "description": "Compatibility 声明对 keystone 平台的兼容性约束（见 CompatibilitySpec）。"
+        },
+        "conflicts": {
+          "$ref": "#/$defs/ConflictsSpec",
+          "description": "Conflicts 声明应用级互斥（同时安装会冲突的应用），保留应用级语义。"
+        },
+        "description": {},
+        "icon": {
+          "description": "Icon 图标资源相对路径（相对 manifest.yaml 所在目录），如 \"icon.svg\"。 publish 时随 tarball 上传，ks-hub 在平台侧登记图标资源，store 详情页据此 渲染图标 URL。yaml/json tag 与历史 manifest.yaml 字段名兼容。",
+          "type": "string"
+        },
+        "id": {
+          "description": "ID 应用唯一标识，也是本应用所有 capability canonical_name 的前缀根 （如 id=translator → 能力 translator.translate）。形态 ^[a-z][a-z0-9-]*$： 小写字母开头、仅含小写字母/数字/连字符、无下划线——因是前缀根故必须严，解析期即校验。",
+          "type": "string"
+        },
+        "managed_resources": {
+          "$ref": "#/$defs/ManagedResourcesSpec",
+          "description": "ManagedResources 声明由 Keystone 在安装时统一分配和注入的托管资源。 应用继续拥有自己的 schema/migration/业务数据语义，平台只负责基础资源 生命周期、隔离、台账与运行时注入。"
+        },
+        "managed_secrets": {
+          "$ref": "#/$defs/ManagedSecretsSpec"
+        },
+        "mount": {
+          "$ref": "#/$defs/MountSpec"
+        },
+        "name": {
+          "description": "Name 应用稳定标识名（不 i18n，与 i18n 的 Summary/Description/Tags 形态不同）。",
+          "type": "string"
+        },
+        "permissions": {
+          "type": "object"
+        },
+        "platform_services": {
+          "$ref": "#/$defs/PlatformServicesSpec"
+        },
+        "pricing": {
+          "$ref": "#/$defs/PricingSpec"
+        },
+        "protection": {
+          "description": "Protection 卸载保护级别（归属平台：第三方 manifest 声明无效、按 none 处理，见 ProtectionLevel）。"
+        },
+        "provides": {
+          "$ref": "#/$defs/ProvidesSpec",
+          "description": "Provides 声明本应用对外暴露的 capability 集合（v0.19.0 capability mesh）。 取代旧 mount.service.auto_register_mcp / mount.extension 的能力暴露语义。"
+        },
+        "publisher": {
+          "type": "string"
+        },
+        "requires": {
+          "$ref": "#/$defs/RequiresSpec",
+          "description": "Requires 声明本应用调用其他应用 capability 的依赖（v0.19.0 capability mesh）。 取代旧 dependencies.requires / dependencies.recommends 的应用级依赖语义。"
+        },
+        "runtime": {
+          "$ref": "#/$defs/RuntimeSpec"
+        },
+        "standalone_fallback": {
+          "$ref": "#/$defs/StandaloneFallbackSpec",
+          "description": "StandaloneFallback 声明非 keystone 托管模式下的本地资源 fallback 配置。 与 ManagedResources 一一对应：managed 模式下忽略此段，standalone 模式下作为 唯一权威源。"
+        },
+        "store": {
+          "$ref": "#/$defs/StoreSpec"
+        },
+        "summary": {},
+        "tags": {},
+        "task_templates": {
+          "description": "TaskTemplates 开箱即用任务模板清单。agent 类应用安装后，keystone 按此清单在平台侧 回填任务模板，用户进入 agent 详情页即可看到现成任务卡片。 详见 task_template.go。",
+          "items": {
+            "$ref": "#/$defs/TaskTemplate"
+          },
+          "type": "array"
+        },
+        "type": {
+          "description": "Type 应用类型 app/squad/agent/skill（怎么选见 apptypes.go AppType 常量注释）。",
+          "enum": [
+            "app",
+            "squad",
+            "agent",
+            "skill"
+          ],
+          "type": "string"
+        },
+        "version": {
+          "description": "Version 应用“包版本”，三段 semver（x.y.z）。与能力契约“名字即身份”（破坏性 变更靠铸新 canonical_name、requires 永不带 version）是两条正交轴——此处管 app 包 发布版本，非能力契约版本。enforcement：解析期仅校验 semver 格式；升级单调性由平台后续阶段执行。",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "version",
+        "type"
+      ],
+      "type": "object"
+    },
+    "AuthSpec": {
+      "properties": {
+        "mode": {
+          "description": "Mode 鉴权模式；为空时按 EffectiveMode 派生（secure-by-default）。 枚举 none | keystone_jwks | static_bearer，见 apptypes.go AuthMode。",
+          "enum": [
+            "none",
+            "keystone_jwks",
+            "static_bearer"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "BackendSpec": {
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "method": {
+          "description": "Method http_endpoint kind 必填，HTTP 方法（GET/POST/...）。",
+          "type": "string"
+        },
+        "path": {
+          "description": "Path http_endpoint kind 必填，应用容器内的 HTTP 路径。",
+          "type": "string"
+        },
+        "tool_name": {
+          "description": "ToolName mcp_tool kind 必填，对应 MCP server 暴露的 tool 名。",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "type": "object"
+    },
+    "CapabilityProfileSpec": {
+      "properties": {
+        "aliases": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "canonical_name": {
+          "type": "string"
+        },
+        "description": {
+          "description": "Description 一段语义真话——这个能力做什么、何时用（合并旧 intent_summary + natural_description，一处声明别拆两段）。最佳实践：写一句真话别堆砌；aliases / user_utterances / use_cases / domain_terms 由 LLM 从 description + schema 生成草稿、 作者审核，不手凑。",
+          "type": "string"
+        },
+        "display_name": {
+          "type": "string"
+        },
+        "domain_terms": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "negative_examples": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "use_cases": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "user_utterances": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "CapabilitySpec": {
+      "properties": {
+        "aliases": {
+          "description": "Aliases 别名集（同一能力的口语化叫法）。",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "backend": {
+          "$ref": "#/$defs/BackendSpec",
+          "description": "Backend 后端路由声明：dispatcher 据此决定调用通道。"
+        },
+        "canonical_name": {
+          "description": "CanonicalName 全局唯一能力名。app_provided 由注册期从 Name 派生（作者不写）； 内置 YAML 维持现状（写全名，如 query.list_my_workflows）。",
+          "type": "string"
+        },
+        "completion_message_template": {
+          "description": "CompletionMessageTemplate 完成时回写消息模板（占位变量待 dispatcher 渲染）。",
+          "type": "string"
+        },
+        "concurrency_limit": {
+          "description": "ConcurrencyLimit 并发上限（0 表示不限）。",
+          "type": "integer"
+        },
+        "decision_mode": {
+          "description": "DecisionMode 决策/审批策略（取代被砍的 requires_approval + app 级 compliance）。 派生字段：为空时由 EffectiveDecisionMode 从 side_effect_level 派生 （none→agent_autonomous / soft_reversible→user_authorized / hard_irreversible→user_only）， 仅在派生失效处（如敏感读：side_effect=none 却要 user_only）显式覆盖。枚举见 compliance.go。",
+          "enum": [
+            "user_only",
+            "user_authorized",
+            "agent_autonomous"
+          ],
+          "type": "string"
+        },
+        "description": {
+          "description": "Description 一段语义真话——这个能力做什么、何时用（合并旧 intent_summary + natural_description，一处声明别拆两段）。最佳实践：写一句真话别堆砌；aliases / user_utterances / use_cases / domain_terms 由 LLM 从 description + schema 生成草稿、 作者审核，不手凑。",
+          "type": "string"
+        },
+        "display_name": {
+          "description": "DisplayName UI 展示名（多语言通过 LocalizedString 升级留后续）。",
+          "type": "string"
+        },
+        "domain_terms": {
+          "description": "DomainTerms 领域术语集（让 LLM 识别上下文专有名词）。",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "execution_mode": {
+          "description": "ExecutionMode 执行模式枚举：sync | long_running | hybrid。",
+          "type": "string"
+        },
+        "guardrail_profile": {
+          "description": "GuardrailProfile 内容/安全 guardrail profile 名（如 content_creation）。",
+          "type": "string"
+        },
+        "input_schema": {
+          "description": "InputSchema 内联输入 JSON Schema（manifest 直接声明，唯一来源；ref 形态已砍）。 主要用途：SDK 透传到 MCP ToolDef.InputSchema，让编排官 tools/list 拿到完整参数 schema。",
+          "type": "object"
+        },
+        "name": {
+          "description": "Name 能力裸名（app_provided 必填，单段无点，正则 ^[a-z][a-z0-9_-]*$）。 作者只写裸名（如 web_search）；全局 canonical_name 由 keystone 注册期派生 \u003capp_id\u003e.\u003cname\u003e，作者不写、不能写前缀（app_id 已在顶层声明）。",
+          "type": "string"
+        },
+        "negative_examples": {
+          "description": "NegativeExamples 反例集（让 LLM 学会拒绝相似但应路由到他处的请求）。",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "notify_policy": {
+          "$ref": "#/$defs/NotifyPolicySpec",
+          "description": "NotifyPolicy 调用生命周期通知策略（指针区分未设置 vs false）。"
+        },
+        "output_schema": {
+          "description": "OutputSchema 内联输出 JSON Schema（与 InputSchema 对称；取代被砍的 output_schema_ref）。 何时填：能力有结构化输出即填——SDK 透传给编排官，便于其规划下游消费。",
+          "type": "object"
+        },
+        "pre_authorize_duration": {
+          "description": "PreAuthorizeDuration 预授权时长；仅 decision_mode=user_authorized 时有意义。枚举见 compliance.go。"
+        },
+        "resumable": {
+          "description": "Resumable 是否支持续跑（long_running task 重启后恢复）。",
+          "type": "boolean"
+        },
+        "side_effect_level": {
+          "description": "SideEffectLevel 副作用/可逆性档：none | soft_reversible | hard_irreversible。",
+          "type": "string"
+        },
+        "tags": {
+          "description": "Tags 自由标签集。",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "timeout_ms": {
+          "description": "TimeoutMs 单次调用超时（毫秒），值域 100..600000；0/留空=用平台默认。 何时填：能力执行时间显著偏离默认时显式声明。",
+          "type": "integer"
+        },
+        "use_cases": {
+          "description": "UseCases 典型使用场景。",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "user_utterances": {
+          "description": "UserUtterances 真实用户语料示例。",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "execution_mode",
+        "backend"
+      ],
+      "type": "object"
+    },
+    "CompatibilitySpec": {
+      "properties": {
+        "keystone": {
+          "description": "Keystone 要求的 keystone 版本区间，写法：单约束 \"\u003e=1.5.0\"、双约束 \"\u003e=1.5.0 \u003c2.0.0\"、或裸版本 \"1.5.0\"（约束符 \u003e=|\u003c=|\u003e|\u003c|= 可选）。何时填：依赖 特定平台能力时；留空=不约束。enforcement：解析期仅校验区间格式，安装期 install gate（拒装不兼容版本）由平台在后续阶段执行。",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ConflictsAppItem": {
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "ConflictsSpec": {
+      "properties": {
+        "apps": {
+          "items": {
+            "$ref": "#/$defs/ConflictsAppItem"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedCacheInjectSpec": {
+      "properties": {
+        "key_prefix": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedCacheResourceSpec": {
+      "properties": {
+        "inject": {
+          "$ref": "#/$defs/ManagedCacheInjectSpec",
+          "description": "Inject env 名映射：平台据此把缓存连接信息注入容器（真载荷，必填）。"
+        },
+        "retain_on_uninstall": {
+          "description": "RetainOnUninstall 卸载时是否保留缓存内容（一般 false）。",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedMySQLInjectSpec": {
+      "properties": {
+        "database": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "port": {
+          "type": "string"
+        },
+        "user": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedMySQLResourceSpec": {
+      "properties": {
+        "inject": {
+          "$ref": "#/$defs/ManagedMySQLInjectSpec",
+          "description": "Inject env 名映射：平台据此把分配好的连接信息注入容器（真载荷，必填）。"
+        },
+        "retain_on_uninstall": {
+          "description": "RetainOnUninstall 卸载时是否保留底层 database（默认 false=随卸载回收）。",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedObjectStorageInjectSpec": {
+      "properties": {
+        "access_key": {
+          "type": "string"
+        },
+        "bucket": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "prefix": {
+          "type": "string"
+        },
+        "public_base_url": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        },
+        "secret_key": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedObjectStorageResourceSpec": {
+      "properties": {
+        "access": {
+          "description": "Access 对象可见性：空（默认 private）| private | public。",
+          "type": "string"
+        },
+        "inject": {
+          "$ref": "#/$defs/ManagedObjectStorageInjectSpec",
+          "description": "Inject env 名映射：平台据此把对象存储连接信息注入容器（真载荷，必填）。"
+        },
+        "retain_on_uninstall": {
+          "description": "RetainOnUninstall 卸载时是否保留底层 bucket 内容。",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedResourcesSpec": {
+      "properties": {
+        "cache": {
+          "$ref": "#/$defs/ManagedCacheResourceSpec"
+        },
+        "mysql": {
+          "$ref": "#/$defs/ManagedMySQLResourceSpec"
+        },
+        "object_storage": {
+          "$ref": "#/$defs/ManagedObjectStorageResourceSpec"
+        },
+        "storage": {
+          "$ref": "#/$defs/ManagedStorageResourceSpec"
+        },
+        "vector_store": {
+          "$ref": "#/$defs/ManagedVectorStoreResourceSpec"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedSecretSpec": {
+      "properties": {
+        "generate": {
+          "type": "string"
+        },
+        "inject": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rotate": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedSecretsSpec": {
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ManagedSecretSpec"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedStorageResourceSpec": {
+      "properties": {
+        "cache": {
+          "$ref": "#/$defs/ManagedStorageScopeSpec"
+        },
+        "config": {
+          "$ref": "#/$defs/ManagedStorageScopeSpec"
+        },
+        "files": {
+          "$ref": "#/$defs/ManagedStorageScopeSpec"
+        },
+        "logs": {
+          "$ref": "#/$defs/ManagedStorageScopeSpec"
+        },
+        "tmp": {
+          "$ref": "#/$defs/ManagedStorageScopeSpec"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedStorageScopeSpec": {
+      "properties": {
+        "read_only": {
+          "type": "boolean"
+        },
+        "retain_on_uninstall": {
+          "type": "boolean"
+        },
+        "size_mb": {
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "ManagedVectorStoreResourceSpec": {
+      "properties": {
+        "retain_on_uninstall": {
+          "description": "RetainOnUninstall 卸载时是否保留底层向量集合。",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "MountSpec": {
+      "properties": {
+        "agent": {
+          "$ref": "#/$defs/AgentMountSpec"
+        },
+        "skill": {
+          "$ref": "#/$defs/SkillMountSpec"
+        }
+      },
+      "type": "object"
+    },
+    "NotifyPolicySpec": {
+      "properties": {
+        "on_done": {
+          "description": "OnDone 任务完成通知（long_running 闭环已接线）。",
+          "type": "boolean"
+        },
+        "on_failed": {
+          "description": "OnFailed 任务失败通知。",
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "PlatformEmbeddingInjectSpec": {
+      "properties": {
+        "dim": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PlatformEmbeddingServiceSpec": {
+      "properties": {
+        "inject": {
+          "$ref": "#/$defs/PlatformEmbeddingInjectSpec"
+        },
+        "model": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "model"
+      ],
+      "type": "object"
+    },
+    "PlatformServicesSpec": {
+      "properties": {
+        "embedding": {
+          "$ref": "#/$defs/PlatformEmbeddingServiceSpec"
+        }
+      },
+      "type": "object"
+    },
+    "PricingSpec": {
+      "properties": {
+        "description": {},
+        "type": {
+          "enum": [
+            "free",
+            "paid",
+            "freemium"
+          ],
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "ProvidesSpec": {
+      "properties": {
+        "capabilities": {
+          "items": {
+            "$ref": "#/$defs/CapabilitySpec"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "RequiresCapabilityItem": {
+      "properties": {
+        "canonical_name": {
+          "description": "CanonicalName 被依赖 capability 的全局名（必须存在于 Registry）。",
+          "type": "string"
+        },
+        "mode": {
+          "description": "Mode 依赖强度：required | recommended | optional。 三档语义： - required：install 时缺则阻断；运行时缺返 CapabilityNotFound - recommended：install 时缺则 warning + UI 推荐；运行时缺返 CapabilityNotFound - optional：install 时不检查；运行时缺由调用方自行处理",
+          "type": "string"
+        },
+        "reason": {
+          "description": "Reason 依赖原因（便于 UI 展示与 install warning 文案）。",
+          "type": "string"
+        }
+      },
+      "required": [
+        "canonical_name",
+        "mode"
+      ],
+      "type": "object"
+    },
+    "RequiresSpec": {
+      "properties": {
+        "capabilities": {
+          "items": {
+            "$ref": "#/$defs/RequiresCapabilityItem"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "ResourcesSpec": {
+      "properties": {
+        "cpu": {
+          "description": "CPU 核数 \"0.5\" / \"2\" 或毫核 \"500m\"。",
+          "type": "string"
+        },
+        "memory": {
+          "description": "Memory 内存量 \"512Mi\" / \"1Gi\"（单位 Ki|Mi|Gi|K|M|G 必填）。",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "RuntimeSpec": {
+      "properties": {
+        "entry": {
+          "type": "string"
+        },
+        "environment": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "health_check": {
+          "type": "string"
+        },
+        "health_check_url": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "mode": {},
+        "resources": {
+          "$ref": "#/$defs/ResourcesSpec"
+        },
+        "volumes": {
+          "description": "端口：keystone 拉起约定容器内监听 8080，manifest 不声明 port/ports。",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "working_dir": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "SkillMountSpec": {
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "profile": {
+          "$ref": "#/$defs/CapabilityProfileSpec"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "StandaloneCacheFallback": {
+      "properties": {
+        "addr": {
+          "type": "string"
+        },
+        "db": {
+          "type": "integer"
+        },
+        "key_prefix": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "StandaloneFallbackSpec": {
+      "properties": {
+        "cache": {
+          "$ref": "#/$defs/StandaloneCacheFallback"
+        },
+        "mysql": {
+          "$ref": "#/$defs/StandaloneMySQLFallback"
+        },
+        "object_storage": {
+          "$ref": "#/$defs/StandaloneObjectStorageFallback"
+        },
+        "storage": {
+          "$ref": "#/$defs/StandaloneStorageFallback"
+        },
+        "vector_store": {
+          "$ref": "#/$defs/StandaloneVectorStoreFallback"
+        }
+      },
+      "type": "object"
+    },
+    "StandaloneMySQLFallback": {
+      "properties": {
+        "database": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "port": {
+          "type": "integer"
+        },
+        "user": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "host",
+        "port",
+        "database",
+        "user",
+        "password"
+      ],
+      "type": "object"
+    },
+    "StandaloneObjectStorageFallback": {
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "root"
+      ],
+      "type": "object"
+    },
+    "StandaloneStorageFallback": {
+      "properties": {
+        "root": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "root"
+      ],
+      "type": "object"
+    },
+    "StandaloneVectorStoreFallback": {
+      "properties": {
+        "collection_prefix": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "url",
+        "collection_prefix"
+      ],
+      "type": "object"
+    },
+    "StoreMediaSpec": {
+      "properties": {
+        "caption": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "type": "object"
+    },
+    "StoreSpec": {
+      "properties": {
+        "audience": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "badges": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "highlights": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "media": {
+          "items": {
+            "$ref": "#/$defs/StoreMediaSpec"
+          },
+          "type": "array"
+        },
+        "presentation": {},
+        "team": {
+          "$ref": "#/$defs/StoreTeamSpec"
+        },
+        "try_prompts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "StoreTeamMemberSpec": {
+      "properties": {
+        "avatar": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "name"
+      ],
+      "type": "object"
+    },
+    "StoreTeamSpec": {
+      "properties": {
+        "lead_role": {
+          "type": "string"
+        },
+        "members": {
+          "items": {
+            "$ref": "#/$defs/StoreTeamMemberSpec"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
+    "TaskTemplate": {
+      "properties": {
+        "category": {
+          "description": "Category 任务分类标签（如\"数据分析\"），UI 用于分组展示。 跟 AppSpec.Category（应用分类）语义独立，两者可同名也可不同。",
+          "type": "string"
+        },
+        "default_values": {
+          "description": "DefaultValues 输入字段默认值（map[字段名]默认值）。",
+          "type": "object"
+        },
+        "description": {
+          "description": "Description 任务用途简述，UI 卡片副标题。",
+          "type": "string"
+        },
+        "icon": {
+          "description": "Icon Lucide React 图标名（如 BarChart2 / TrendingUp / Code2 / ClipboardList）， 不是文件路径——跟 AppSpec.Icon 字段语义独立。",
+          "type": "string"
+        },
+        "input_mapping": {
+          "description": "InputMapping 用户输入 → agent prompt 变量的映射规则，keystone task engine 消费。",
+          "type": "object"
+        },
+        "input_schema": {
+          "description": "InputSchema 输入表单的 JSON Schema（type / properties / required 等），平台侧入库后 前端按此渲染表单。必填，至少含 type+properties。",
+          "type": "object"
+        },
+        "name": {
+          "description": "Name 模板标题（如\"业务数据周报\"），UI 卡片标题。必填。",
+          "type": "string"
+        },
+        "sort_order": {
+          "description": "SortOrder 排序权重，UI 按升序排列。同值按 created_at 兜底。",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "input_schema"
+      ],
+      "type": "object"
+    }
+  },
+  "$ref": "#/$defs/AppSpec",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

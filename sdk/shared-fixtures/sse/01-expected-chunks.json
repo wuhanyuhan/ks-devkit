@@ -1,0 +1,5 @@
+[
+  {"delta_content": "你"},
+  {"delta_content": "好"},
+  {"delta_content": "！", "finish_reason": "stop"}
+]

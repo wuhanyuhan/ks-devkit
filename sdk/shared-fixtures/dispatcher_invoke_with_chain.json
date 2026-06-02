@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "POST",
+    "path": "/v1/apps/self/invoke",
+    "headers": {
+      "X-Keystone-Chain-Id": "chn_1",
+      "X-Keystone-Call-Chain": "eyJjaGFpbiI6IDF9"
+    },
+    "body": {
+      "capability": "ks-mcp-other.generate",
+      "args": {"prompt": "hi"},
+      "mode": "sync",
+      "on_behalf_of_user_id": 42
+    }
+  },
+  "response": {
+    "code": 0,
+    "message": "",
+    "data": {"result": {"ok": true}, "duration_ms": 1}
+  }
+}

@@ -1,0 +1,36 @@
+id: ks-mcp-database
+name: 数据库连接器
+version: "0.1.0"
+type: app
+summary: 只读业务数据库连接器（v1：MySQL/PostgreSQL）
+description: |
+  让 agent 对客户业务数据库做安全的只读查询：列数据源、列表、看表结构、跑 SELECT。
+runtime:
+  mode: container
+  health_check_url: "http://localhost:9986/healthz"
+  image: "ks-mcp-database:0.1.0"
+provides:
+  capabilities:
+    - name: run_query
+      display_name: 执行只读查询
+      execution_mode: sync
+      timeout_ms: 60000
+      backend: {kind: mcp_tool, tool_name: run_query}
+      side_effect_level: none
+      description: 以安全只读方式对指定数据源执行 SELECT 查询，返回行集、列元数据与执行的 SQL。
+    - name: grant_datasource
+      display_name: 授权数据源给 agent
+      execution_mode: sync
+      timeout_ms: 15000
+      backend: {kind: http_endpoint, path: /capabilities/grant_datasource, method: POST}
+      side_effect_level: soft_reversible
+      description: 建立数据源↔agent 的访问授权；未授权的 agent 看不到也用不了该数据源。
+managed_resources:
+  mysql:
+    retain_on_uninstall: true
+    inject:
+      host: DB_HOST
+      password: DB_PASSWORD
+  storage:
+    files:
+      size_mb: 1024

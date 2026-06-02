@@ -1,0 +1,55 @@
+name: Conformance
+
+on:
+  pull_request:
+    paths:
+      - 'conformance/auth/**'
+      - 'sdk/go/**'
+      - 'sdk/python/**'
+  push:
+    branches: [master]
+    paths:
+      - 'conformance/auth/**'
+      - 'sdk/go/**'
+      - 'sdk/python/**'
+
+jobs:
+  go-claimant:
+    name: Go claimant (ksapp)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          python3 -m pip install --user cryptography
+      - name: Run conformance
+        run: |
+          cd conformance/auth
+          ./orchestrate.sh \
+            --claimant-cmd="cd ../../sdk/go/conformance-claimant && go run ." \
+            --claimant-port=8080
+
+  python-claimant:
+    name: Python claimant (ks_app)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          pip install cryptography
+          cd sdk/python && pip install -e .
+          cd conformance-claimant && pip install -e .
+      - name: Run conformance
+        run: |
+          cd conformance/auth
+          ./orchestrate.sh \
+            --claimant-cmd="cd ../../sdk/python/conformance-claimant && python main.py" \
+            --claimant-port=8080
