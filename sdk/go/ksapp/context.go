@@ -68,3 +68,9 @@ func ChainID(ctx context.Context) string {
 func ChainSnapshot(ctx context.Context) string {
 	return mcpproto.ChainSnapshot(ctx)
 }
+
+// ConversationID 从 context 中提取 keystone 会话 ID（承载 wire ks_conversation_id）。
+// 下游服务据此把决策门 / 交付物等回流到正确的 keystone 会话。
+func ConversationID(ctx context.Context) string {
+	return mcpproto.ConversationID(ctx)
+}

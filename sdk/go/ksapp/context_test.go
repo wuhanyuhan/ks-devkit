@@ -96,3 +96,10 @@ func TestReusedToolReadsCallerFromCtx(t *testing.T) {
 		t.Fatalf("ChainID=%q want chn_1", got)
 	}
 }
+
+func TestConversationID_DelegatesToMcpproto(t *testing.T) {
+	ctx := mcpproto.WithMeta(context.Background(), map[string]any{"ks_conversation_id": "1183"})
+	if v := ConversationID(ctx); v != "1183" {
+		t.Errorf("ksapp.ConversationID = %q，期望 1183", v)
+	}
+}
