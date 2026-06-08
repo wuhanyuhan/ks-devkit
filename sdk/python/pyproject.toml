@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ks-app-sdk"
-version = "0.11.0"
+version = "0.12.0"
 description = "Keystone 平台 MCP Service SDK（Python）"
 authors = [{name = "Keystone Team"}]
 license = {text = "MIT"}
