@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/wuhanyuhan/ks-devkit/sdk/go v0.0.0-00010101000000-000000000000
-	github.com/wuhanyuhan/ks-types v0.31.0
+	github.com/wuhanyuhan/ks-types v0.35.0
 )
 
 require (
