@@ -437,9 +437,39 @@ func (a *App) Run() {
 	a.RunWithContext(ctx)
 }
 
+// deriveNavState 从 a.nav 推 (navState, openMode)，供 validateConfigConsistency 调 ks-types 矩阵。
+// nav 未声明→NavAbsent；声明但字段不齐/枚举错→NavInvalid；否则→NavValid + openMode。
+func (a *App) deriveNavState() (kstypes.NavState, string) {
+	if a.nav == nil {
+		return kstypes.NavAbsent, ""
+	}
+	if a.nav.Label == "" || a.nav.Category == "" || a.nav.OpenMode == "" {
+		return kstypes.NavInvalid, ""
+	}
+	switch a.nav.OpenMode {
+	case "dialog", "fullpage", "tab":
+		return kstypes.NavValid, a.nav.OpenMode
+	default:
+		return kstypes.NavInvalid, ""
+	}
+}
+
+// validateConfigConsistency 启动期对 nav/config_mode/config_ui 组合做一致性终检（A6）。
+// 不一致即 panic（fail-fast），矩阵 + reason 来自 ks-types 单一事实源（与 keystone 摄入诊断同一张矩阵）。
+func (a *App) validateConfigConsistency() {
+	navState, openMode := a.deriveNavState()
+	hasConfigUI := a.configUI != nil && a.configUI.Enabled
+	if reason, ok := kstypes.CheckNavConfigConsistency(navState, openMode, a.configMode, hasConfigUI); !ok {
+		panic(fmt.Sprintf("ksapp: 配置组合不一致，应用入口无法工作: %s", reason))
+	}
+}
+
 // RunWithContext 启动 HTTP 服务器，阻塞直到 ctx 被取消。
 // 适用于应用需要自行管理生命周期的场景（如后台 goroutine 协调退出）。
 func (a *App) RunWithContext(ctx context.Context) {
+	// 启动期组合一致性终检（A6）：nav/config_mode 不一致即 fail-fast，
+	// 与 keystone 摄入诊断共用 ks-types 同一张矩阵。
+	a.validateConfigConsistency()
 	// 启动期先 Bootstrap 注入 DEK，再构建 Mux。
 	// 目的：把"NewConfigOn 注册但 Bootstrap 漏调"的暴露从"首次 save panic"提前到
 	// "启动完成前 panic"，fail-fast。
