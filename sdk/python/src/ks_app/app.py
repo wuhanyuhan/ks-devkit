@@ -221,7 +221,7 @@ class App:
     def mount_config_ui(self, directory: str, path: str = "/config-ui"):
         """挂载前端静态资源到 path（默认 /config-ui）。
 
-        /meta 的 config_ui 字段会自动填 {"path": path + "/"}。
+        /meta 的 config_ui 字段会自动归一为 ks-types 标准 {"enabled": True, "url": path + "/"}（A5）。
 
         Raises:
             RuntimeError: 已调过 mount_static_root（两者共用
@@ -259,6 +259,30 @@ class App:
                 f"当前为 {self._config_mode!r}"
             )
         self._static_root_dir = directory
+
+    def _resolve_config_ui(self) -> dict | None:
+        """解析最终 config_ui，归一到 ks-types 标准 {enabled,url}（A5）。
+        manifest 来源优先，否则代码 mount_config_ui。兼容老 {path} 形态。
+        """
+        raw = load_manifest_config_ui(self.manifest_path)
+        cu = self._normalize_config_ui(raw)
+        if cu is None and self._config_ui_dir:
+            cu = {"enabled": True, "url": f"{self._config_ui_path}/"}
+        return cu
+
+    @staticmethod
+    def _normalize_config_ui(raw: dict | None) -> dict | None:
+        """把任意来源的 config_ui 归一到 {enabled,url}（A5）。
+        老 {path} 形态 → {enabled:True, url:path}；已有 enabled/url 则补全透传。
+        """
+        if not raw:
+            return None
+        if "url" in raw or "enabled" in raw:
+            return {"enabled": bool(raw.get("enabled", True)), "url": raw.get("url", "")}
+        path = raw.get("path")
+        if path:
+            return {"enabled": True, "url": path}
+        return None
 
     def declare_nav(
         self,
@@ -526,9 +550,7 @@ class App:
                 )
         self._http_capability_path_map = http_path_to_name
 
-        manifest_config_ui = load_manifest_config_ui(self.manifest_path)
-        if self._config_ui_dir and not manifest_config_ui:
-            manifest_config_ui = {"path": f"{self._config_ui_path}/"}
+        manifest_config_ui = self._resolve_config_ui()
 
         routes: list = health_routes(
             self.app_id,

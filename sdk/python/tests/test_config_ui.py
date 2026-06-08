@@ -30,7 +30,7 @@ def test_meta_reports_config_ui(tmp_path, monkeypatch):
     r = client.get("/meta")
     assert r.status_code == 200
     data = r.json()
-    assert data.get("config_ui") == {"path": "/config-ui/"}
+    assert data.get("config_ui") == {"enabled": True, "url": "/config-ui/"}
 
 
 def test_mount_config_ui_custom_path(tmp_path, monkeypatch):
@@ -46,11 +46,11 @@ def test_mount_config_ui_custom_path(tmp_path, monkeypatch):
     assert r.status_code == 200
 
     meta = client.get("/meta").json()
-    assert meta["config_ui"] == {"path": "/ui/"}
+    assert meta["config_ui"] == {"enabled": True, "url": "/ui/"}
 
 
 def test_manifest_config_ui_fallback(tmp_path, monkeypatch):
-    """若 manifest.yaml 定义了 config_ui.path，/meta 优先用 manifest 的值。"""
+    """若 manifest.yaml 定义了 config_ui.path，/meta 优先用 manifest 的值（归一到 {enabled,url}，A5）。"""
     monkeypatch.setenv("KS_APP_AUTH_MODE", "insecure")
 
     manifest = tmp_path / "manifest.yaml"
@@ -67,4 +67,4 @@ mount:
     starlette_app = app.create_app()
     client = TestClient(starlette_app)
     meta = client.get("/meta").json()
-    assert meta["config_ui"] == {"path": "/declared-ui/"}
+    assert meta["config_ui"] == {"enabled": True, "url": "/declared-ui/"}
