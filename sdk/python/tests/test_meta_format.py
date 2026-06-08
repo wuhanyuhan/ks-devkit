@@ -130,15 +130,24 @@ def test_meta_v040_declare_permission_appears_in_response(monkeypatch):
     assert "permissions" not in data2
 
 
-def test_meta_v040_set_config_mode_appears_in_response(monkeypatch):
+def test_meta_v040_set_config_mode_appears_in_response(monkeypatch, tmp_path):
     monkeypatch.setenv("KS_APP_AUTH_MODE", "insecure")
     for mode in ("schema", "iframe", "none"):
         app = App("svc", manifest_path="nonexistent.yaml")
         app.set_config_mode(mode)
+        # A6 启动终检要求 config_mode 有合法 nav 承载：
+        # schema→dialog 弹窗；iframe→dialog+config_ui；none→fullpage 业务前端。
+        if mode == "schema":
+            app.declare_nav(label="配置", category="配置", open_mode="dialog")
+        elif mode == "iframe":
+            app.declare_nav(label="配置", category="配置", open_mode="dialog")
+            app.mount_config_ui(str(tmp_path))
+        else:
+            app.declare_nav(label="主页", category="应用", open_mode="fullpage")
         data = TestClient(app.create_app()).get("/meta").json()
         assert data["config_mode"] == mode
 
-    # 反向：未调缺省
+    # 反向：未调缺省（无 nav + 无 config_mode = 纯工具，合法）
     app2 = App("svc", manifest_path="nonexistent.yaml")
     data2 = TestClient(app2.create_app()).get("/meta").json()
     assert "config_mode" not in data2

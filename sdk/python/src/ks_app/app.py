@@ -28,6 +28,12 @@ from .keystone_client import SelfClient
 from .embedding import EmbeddingClient
 from .llm import LLMClient
 from .manifest import ProvidesCapability, load_manifest_capabilities, load_manifest_config_ui
+from .config_consistency import (
+    NAV_ABSENT,
+    NAV_INVALID,
+    NAV_VALID,
+    check_nav_config_consistency,
+)
 from .mcpproto import legacy_call_route, legacy_list_route, mcp_route
 from .vector_store import VectorStoreClient
 
@@ -284,6 +290,30 @@ class App:
             return {"enabled": True, "url": path}
         return None
 
+    def _derive_nav_state(self) -> tuple[str, str]:
+        """从 self._nav 推 (nav_state, open_mode)，供 _validate_config_consistency 调对等矩阵。"""
+        if self._nav is None:
+            return (NAV_ABSENT, "")
+        label = self._nav.get("label", "")
+        category = self._nav.get("category", "")
+        open_mode = self._nav.get("open_mode", "")
+        if not label or not category or not open_mode:
+            return (NAV_INVALID, "")
+        if open_mode in ("dialog", "fullpage", "tab"):
+            return (NAV_VALID, open_mode)
+        return (NAV_INVALID, "")
+
+    def _validate_config_consistency(self) -> None:
+        """启动期 nav/config_mode/config_ui 组合一致性终检（A6），不一致即 raise（fail-fast）。"""
+        nav_state, open_mode = self._derive_nav_state()
+        cu = self._resolve_config_ui()
+        has_config_ui = bool(cu and cu.get("enabled"))
+        reason, ok = check_nav_config_consistency(
+            nav_state, open_mode, self._config_mode or "", has_config_ui
+        )
+        if not ok:
+            raise RuntimeError(f"ks_app: 配置组合不一致，应用入口无法工作: {reason}")
+
     def declare_nav(
         self,
         *,
@@ -449,6 +479,8 @@ class App:
 
     def create_app(self) -> Starlette:
         """构建并返回 Starlette 实例。"""
+        # 启动期组合一致性终检（A6）：与 keystone 摄入诊断共用矩阵语义，不一致 fail-fast。
+        self._validate_config_consistency()
         # 启动期 manifest 校验 + capability backend 元信息注入。
         # 注册的 capability canonical_name 必须存在于 manifest.provides.capabilities[]，
         # 否则抛 ManifestMismatch（启动期失败，不允许带病上线）。

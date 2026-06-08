@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {"name": "absent_none", "nav_state": "absent", "open_mode": "", "config_mode": "none", "has_config_ui": false, "ok": true},
+    {"name": "absent_empty", "nav_state": "absent", "open_mode": "", "config_mode": "", "has_config_ui": false, "ok": true},
+    {"name": "absent_schema", "nav_state": "absent", "open_mode": "", "config_mode": "schema", "has_config_ui": false, "ok": false},
+    {"name": "absent_iframe", "nav_state": "absent", "open_mode": "", "config_mode": "iframe", "has_config_ui": false, "ok": false},
+    {"name": "invalid", "nav_state": "invalid", "open_mode": "", "config_mode": "schema", "has_config_ui": false, "ok": false},
+    {"name": "dialog_schema", "nav_state": "valid", "open_mode": "dialog", "config_mode": "schema", "has_config_ui": false, "ok": true},
+    {"name": "dialog_iframe_with_ui", "nav_state": "valid", "open_mode": "dialog", "config_mode": "iframe", "has_config_ui": true, "ok": true},
+    {"name": "dialog_iframe_no_ui", "nav_state": "valid", "open_mode": "dialog", "config_mode": "iframe", "has_config_ui": false, "ok": false},
+    {"name": "dialog_none_dead", "nav_state": "valid", "open_mode": "dialog", "config_mode": "none", "has_config_ui": false, "ok": false},
+    {"name": "fullpage_none", "nav_state": "valid", "open_mode": "fullpage", "config_mode": "none", "has_config_ui": false, "ok": true},
+    {"name": "fullpage_empty_defaults_none", "nav_state": "valid", "open_mode": "fullpage", "config_mode": "", "has_config_ui": false, "ok": true},
+    {"name": "fullpage_iframe_illegal", "nav_state": "valid", "open_mode": "fullpage", "config_mode": "iframe", "has_config_ui": false, "ok": false},
+    {"name": "fullpage_schema_dead", "nav_state": "valid", "open_mode": "fullpage", "config_mode": "schema", "has_config_ui": false, "ok": false},
+    {"name": "tab_none", "nav_state": "valid", "open_mode": "tab", "config_mode": "none", "has_config_ui": false, "ok": true},
+    {"name": "tab_iframe_illegal", "nav_state": "valid", "open_mode": "tab", "config_mode": "iframe", "has_config_ui": false, "ok": false}
+  ]
+}
