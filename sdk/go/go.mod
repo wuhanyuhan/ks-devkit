@@ -6,7 +6,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/websocket v1.5.1
 	github.com/wuhanyuhan/ks-devkit/conformance v1.0.0
-	github.com/wuhanyuhan/ks-types v0.31.0
+	github.com/wuhanyuhan/ks-types v0.35.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 

@@ -24,7 +24,7 @@
           "description": "Auth app 级鉴权契约（顶层 auth 段）。详见 AuthSpec。"
         },
         "author": {
-          "description": "Author 应用作者标识（人或组织名）。Publisher 是发布主体（必为 ks-hub publisher），Author 可独立标注开发者署名。",
+          "description": "Author 应用作者标识（人或组织名）。Publisher 是发布主体（由平台分配）， Author 可独立标注开发者署名。",
           "type": "string"
         },
         "category": {
@@ -44,7 +44,7 @@
         },
         "description": {},
         "icon": {
-          "description": "Icon 图标资源相对路径（相对 manifest.yaml 所在目录），如 \"icon.svg\"。 publish 时随 tarball 上传，ks-hub 在平台侧登记图标资源，store 详情页据此 渲染图标 URL。yaml/json tag 与历史 manifest.yaml 字段名兼容。",
+          "description": "Icon 图标资源相对路径（相对 manifest.yaml 所在目录），如 \"icon.svg\"。 publish 时随 tarball 上传，平台登记图标资源，store 详情页据此 渲染图标 URL。yaml/json tag 与历史 manifest.yaml 字段名兼容。",
           "type": "string"
         },
         "id": {
@@ -260,6 +260,10 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "entry": {
+          "description": "Entry 标记该能力是否为 squad 专家团对编排官的「入口动作」。 仅 type=squad 应用有意义：keystone 安装时据此派生团队锚点并标记成员； 普通 app/agent/skill 留默认 false，行为不变。",
+          "type": "boolean"
         },
         "execution_mode": {
           "description": "ExecutionMode 执行模式枚举：sync | long_running | hybrid。",
