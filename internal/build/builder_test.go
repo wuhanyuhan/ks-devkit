@@ -192,3 +192,83 @@ func TestBuild_SkipsHiddenFilesAndDist(t *testing.T) {
 		t.Error("tarball missing main.go")
 	}
 }
+
+func TestBuildWithOptions_UsesPreflightIncludedFilesForTarball(t *testing.T) {
+	dir := t.TempDir()
+
+	_ = os.WriteFile(filepath.Join(dir, "manifest.yaml"), []byte(
+		"id: test-app\nname: Test\nversion: 1.0.0\ntype: app\n"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, ".ksignore"), []byte(
+		"docs/\ntestdata/\nadmin-ui/node_modules/\n"), 0644)
+
+	for _, d := range []string{
+		filepath.Join(dir, "docs"),
+		filepath.Join(dir, "testdata"),
+		filepath.Join(dir, "admin-ui", "node_modules", "pkg"),
+		filepath.Join(dir, "vendor", "example"),
+	} {
+		if err := os.MkdirAll(d, 0755); err != nil {
+			t.Fatalf("mkdir %s: %v", d, err)
+		}
+	}
+	_ = os.WriteFile(filepath.Join(dir, "docs", "ignored.md"), []byte("doc"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "testdata", "fixture.txt"), []byte("fixture"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "admin-ui", "node_modules", "pkg", "index.js"), []byte("module"), 0644)
+	_ = os.WriteFile(filepath.Join(dir, "vendor", "example", "keep.go"), []byte("package example\n"), 0644)
+
+	result, report, err := BuildWithOptions(dir, filepath.Join(dir, "dist"), &BuildOptions{
+		Preflight: &PreflightOptions{AllowSecrets: true},
+	})
+	if err != nil {
+		t.Fatalf("BuildWithOptions: %v", err)
+	}
+	if report.FileCount == 0 {
+		t.Fatal("preflight should include runtime files")
+	}
+
+	entries := readTarEntries(t, result.TarballPath)
+	for _, name := range []string{
+		"docs/ignored.md",
+		"testdata/fixture.txt",
+		"admin-ui/node_modules/pkg/index.js",
+	} {
+		if entries[name] {
+			t.Errorf("tarball should not contain preflight-excluded file %q", name)
+		}
+	}
+	for _, name := range []string{
+		"manifest.yaml",
+		"main.go",
+		"vendor/example/keep.go",
+	} {
+		if !entries[name] {
+			t.Errorf("tarball should contain preflight-included file %q", name)
+		}
+	}
+}
+
+func readTarEntries(t *testing.T, tarballPath string) map[string]bool {
+	t.Helper()
+
+	f, err := os.Open(tarballPath)
+	if err != nil {
+		t.Fatalf("open tarball: %v", err)
+	}
+	defer f.Close()
+	gz, err := gzip.NewReader(f)
+	if err != nil {
+		t.Fatalf("gzip reader: %v", err)
+	}
+	defer gz.Close()
+	tr := tar.NewReader(gz)
+	entries := map[string]bool{}
+	for {
+		h, err := tr.Next()
+		if err != nil {
+			break
+		}
+		entries[h.Name] = true
+	}
+	return entries
+}

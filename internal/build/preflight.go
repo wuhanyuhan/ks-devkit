@@ -210,7 +210,6 @@ var hardExcludePatterns = []hardPattern{
 	{seg: ".gcp", typ: dirSegment},
 	{seg: ".azure", typ: dirSegment},
 	{seg: "node_modules", typ: dirSegment},
-	{seg: "vendor", typ: dirSegment},
 	{seg: "__pycache__", typ: dirSegment},
 	{seg: ".pyc", typ: fileSuffix},
 	{seg: ".DS_Store", typ: fileExactOrPrefix},

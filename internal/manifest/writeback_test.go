@@ -194,3 +194,50 @@ mount:
 		t.Fatalf("updated summary not reflected in upload JSON: %s", raw)
 	}
 }
+
+func TestMarshalManifestJSONForUpload_PreservesUnknownRuntimeFields(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "manifest.yaml")
+	if err := os.WriteFile(path, []byte(`id: ks-mcp-sandbox
+name: 沙盒执行服务
+version: 4.0.0
+type: app
+runtime:
+  mode: container
+  image: ks-mcp-sandbox:old
+  writable_root_fs: true
+  health_check: /health
+`), 0644); err != nil {
+		t.Fatal(err)
+	}
+	spec := &kstypes.AppSpec{
+		ID:      "ks-mcp-sandbox",
+		Name:    "沙盒执行服务",
+		Version: "4.0.0",
+		Type:    "app",
+		Runtime: kstypes.RuntimeSpec{
+			Mode:        kstypes.RuntimeModeContainer,
+			Image:       "ks-mcp-sandbox:new",
+			HealthCheck: "/ready",
+		},
+	}
+
+	raw, err := MarshalManifestJSONForUpload(path, spec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]any
+	if err := json.Unmarshal(raw, &m); err != nil {
+		t.Fatal(err)
+	}
+	runtime := m["runtime"].(map[string]any)
+	if runtime["writable_root_fs"] != true {
+		t.Fatalf("runtime.writable_root_fs lost in upload JSON: %s", raw)
+	}
+	if runtime["image"] != "ks-mcp-sandbox:new" {
+		t.Fatalf("typed runtime.image should override disk value: %s", raw)
+	}
+	if runtime["health_check"] != "/ready" {
+		t.Fatalf("typed runtime.health_check should override disk value: %s", raw)
+	}
+}

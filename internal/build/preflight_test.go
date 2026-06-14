@@ -68,7 +68,6 @@ func TestHardExcludeMatchesSSHIdentities(t *testing.T) {
 func TestHardExcludeMatchesDepsDirs(t *testing.T) {
 	cases := []string{
 		"node_modules/foo",
-		"vendor/bar",
 		"__pycache__/x.pyc",
 		"a.pyc",
 	}
@@ -76,6 +75,12 @@ func TestHardExcludeMatchesDepsDirs(t *testing.T) {
 		if !isHardExcluded(p) {
 			t.Errorf("expected %q to be hard-excluded", p)
 		}
+	}
+}
+
+func TestHardExcludeDoesNotDropGoVendorDir(t *testing.T) {
+	if isHardExcluded("vendor/bar") {
+		t.Fatal("vendor should be controlled by .ksignore, not hard-excluded")
 	}
 }
 

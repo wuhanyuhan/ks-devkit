@@ -81,9 +81,24 @@ func mergedManifestMap(path string, spec *kstypes.AppSpec) (map[string]any, erro
 				continue
 			}
 		}
-		base[key] = value
+		base[key] = mergeManifestValue(base[key], value)
 	}
 	return base, nil
+}
+
+func mergeManifestValue(baseValue, typedValue any) any {
+	baseMap, baseOK := baseValue.(map[string]any)
+	typedMap, typedOK := typedValue.(map[string]any)
+	if !baseOK || !typedOK {
+		return typedValue
+	}
+	for key, value := range typedMap {
+		if value == nil {
+			continue
+		}
+		baseMap[key] = mergeManifestValue(baseMap[key], value)
+	}
+	return baseMap
 }
 
 // simplifyLocalizedField 把单 zh-CN entry 的 map 压缩成裸值。

@@ -32,20 +32,27 @@ type BuildResult struct {
 // Build 读取 projectDir 下的 manifest.yaml，校验后将项目打包为
 // gzip tarball 写入 outputDir，并返回带 SHA256 的构建结果。
 func Build(projectDir, outputDir string) (*BuildResult, error) {
-	// 1. 读取并校验 manifest
+	manifest, installSpec, err := loadProjectSpecs(projectDir)
+	if err != nil {
+		return nil, err
+	}
+	return buildTarball(projectDir, outputDir, manifest, installSpec, nil)
+}
+
+func loadProjectSpecs(projectDir string) (*kstypes.AppSpec, *kstypes.InstallSpec, error) {
 	manifestPath := filepath.Join(projectDir, "manifest.yaml")
 	manifestData, err := os.ReadFile(manifestPath)
 	if err != nil {
-		return nil, fmt.Errorf("读取 manifest.yaml 失败: %w", err)
+		return nil, nil, fmt.Errorf("读取 manifest.yaml 失败: %w", err)
 	}
 
 	manifest, err := kstypes.ParseAppSpec(manifestData)
 	if err != nil {
-		return nil, fmt.Errorf("解析 manifest 失败: %w", err)
+		return nil, nil, fmt.Errorf("解析 manifest 失败: %w", err)
 	}
 
 	if err := manifest.Validate(); err != nil {
-		return nil, fmt.Errorf("manifest 校验失败: %w", err)
+		return nil, nil, fmt.Errorf("manifest 校验失败: %w", err)
 	}
 
 	// 权限声明校验
@@ -53,7 +60,7 @@ func Build(projectDir, outputDir string) (*BuildResult, error) {
 		registry := kstypes.DefaultPermissionRegistry()
 		warnings, err := registry.Validate(manifest.Permissions)
 		if err != nil {
-			return nil, fmt.Errorf("权限声明无效: %w", err)
+			return nil, nil, fmt.Errorf("权限声明无效: %w", err)
 		}
 		for _, w := range warnings {
 			fmt.Fprintf(os.Stderr, "⚠ 权限警告: %s\n", w.Message)
@@ -69,30 +76,37 @@ func Build(projectDir, outputDir string) (*BuildResult, error) {
 	if installData, err := os.ReadFile(installPath); err == nil {
 		installSpec, err = kstypes.ParseInstallSpec(installData)
 		if err != nil {
-			return nil, fmt.Errorf("解析 install.yaml 失败: %w", err)
+			return nil, nil, fmt.Errorf("解析 install.yaml 失败: %w", err)
 		}
 		if err := installSpec.Validate(); err != nil {
-			return nil, fmt.Errorf("install.yaml 校验失败: %w", err)
+			return nil, nil, fmt.Errorf("install.yaml 校验失败: %w", err)
 		}
 	} else if !os.IsNotExist(err) {
-		return nil, fmt.Errorf("读取 install.yaml 失败: %w", err)
+		return nil, nil, fmt.Errorf("读取 install.yaml 失败: %w", err)
 	}
 
-	// 2. 创建输出目录
+	return manifest, installSpec, nil
+}
+
+func buildTarball(projectDir, outputDir string, manifest *kstypes.AppSpec, installSpec *kstypes.InstallSpec, includedFiles []string) (*BuildResult, error) {
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return nil, err
 	}
 
-	// 3. 打包 tarball
 	tarballName := fmt.Sprintf("%s-%s.tar.gz", manifest.ID, manifest.Version)
 	tarballPath := filepath.Join(outputDir, tarballName)
 
-	if err := createTarball(projectDir, tarballPath); err != nil {
+	var err error
+	if includedFiles == nil {
+		err = createTarball(projectDir, tarballPath)
+	} else {
+		err = createTarballFromFiles(projectDir, tarballPath, includedFiles)
+	}
+	if err != nil {
 		_ = os.Remove(tarballPath)
 		return nil, fmt.Errorf("打包失败: %w", err)
 	}
 
-	// 4. 计算 checksum
 	checksum, err := SHA256File(tarballPath)
 	if err != nil {
 		return nil, err
@@ -130,23 +144,23 @@ func BuildWithOptions(projectDir, outputDir string, opts *BuildOptions) (*BuildR
 	}
 	if opts.DryRun {
 		// dry-run：跳过实际打包，仅返回 manifest 信息
-		manifestPath := filepath.Join(projectDir, "manifest.yaml")
-		manifestData, mErr := os.ReadFile(manifestPath)
+		manifest, installSpec, mErr := loadProjectSpecs(projectDir)
 		if mErr != nil {
-			return nil, report, fmt.Errorf("读取 manifest.yaml 失败: %w", mErr)
-		}
-		manifest, mErr := kstypes.ParseAppSpec(manifestData)
-		if mErr != nil {
-			return nil, report, fmt.Errorf("解析 manifest 失败: %w", mErr)
+			return nil, report, mErr
 		}
 		return &BuildResult{
-			AppID:   manifest.ID,
-			Version: manifest.Version,
-			AppSpec: manifest,
+			AppID:       manifest.ID,
+			Version:     manifest.Version,
+			AppSpec:     manifest,
+			InstallSpec: installSpec,
 		}, report, nil
 	}
-	// 走现有 Build 流程（已通过 preflight，重复部分可接受）
-	res, err := Build(projectDir, outputDir)
+
+	manifest, installSpec, err := loadProjectSpecs(projectDir)
+	if err != nil {
+		return nil, report, err
+	}
+	res, err := buildTarball(projectDir, outputDir, manifest, installSpec, report.IncludedFiles)
 	if err != nil {
 		return nil, report, err
 	}
@@ -221,4 +235,58 @@ func createTarball(srcDir, dst string) error {
 		_, err = io.Copy(tw, file)
 		return err
 	})
+}
+
+func createTarballFromFiles(srcDir, dst string, relFiles []string) error {
+	f, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gw := gzip.NewWriter(f)
+	defer gw.Close()
+
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	for _, rel := range relFiles {
+		cleanRel := filepath.Clean(filepath.FromSlash(rel))
+		if cleanRel == "." || filepath.IsAbs(cleanRel) || strings.HasPrefix(cleanRel, ".."+string(filepath.Separator)) {
+			return fmt.Errorf("非法打包路径: %s", rel)
+		}
+
+		path := filepath.Join(srcDir, cleanRel)
+		info, err := os.Lstat(path)
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			continue
+		}
+
+		header, err := tar.FileInfoHeader(info, "")
+		if err != nil {
+			return err
+		}
+		header.Name = filepath.ToSlash(cleanRel)
+
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		_, copyErr := io.Copy(tw, file)
+		closeErr := file.Close()
+		if copyErr != nil {
+			return copyErr
+		}
+		if closeErr != nil {
+			return closeErr
+		}
+	}
+	return nil
 }

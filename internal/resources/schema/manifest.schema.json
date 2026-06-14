@@ -727,6 +727,10 @@
         },
         "working_dir": {
           "type": "string"
+        },
+        "writable_root_fs": {
+          "description": "WritableRootFS 显式 opt-in 容器可写 rootfs（能在容器内 apt/pip 装软件、写系统目录）。 零值 false = 只读 rootfs（安全默认，所有未声明的 container app 保持只读）。 keystone buildAgentAppSpec 据此填 agentclient.AppSpec.ReadOnlyRootFS = !WritableRootFS。",
+          "type": "boolean"
         }
       },
       "type": "object"

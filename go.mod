@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	github.com/sabhiram/go-gitignore v0.0.0-20210923224102-525f6e181f06
 	github.com/spf13/cobra v1.10.2
-	github.com/wuhanyuhan/ks-types v0.35.0
+	github.com/wuhanyuhan/ks-types v0.41.0
 	golang.org/x/term v0.41.0
 	golang.org/x/tools v0.45.0
 	gopkg.in/yaml.v3 v3.0.1
