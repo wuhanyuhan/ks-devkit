@@ -46,6 +46,12 @@
 | `dispatcher_invoke_with_chain.json` | `POST /v1/apps/self/invoke`（chain header + 全名 capability）|
 | `canonical_derivation.json` | 去前缀 canonical 派生 `<app_id>.<name>` 两语言一致 |
 
+## Readiness fixture
+
+| 文件 | 端点 / 覆盖点 |
+|---|---|
+| `readiness.json` | `GET /ks-readiness` 响应 + `POST /ks-readiness/init` 请求体（就绪端点 wire 契约） |
+
 ## 使用方式
 
 Go: `go:embed sdk/shared-fixtures/sse/*` 或测试时读取相对路径

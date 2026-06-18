@@ -1,0 +1,9 @@
+{
+  "readiness_report": {
+    "gates": [
+      {"id": "corpus_embed", "status": "running", "progress": 42, "message": "已嵌入 1200/2900 条"},
+      {"id": "warm_cache", "status": "ready"}
+    ]
+  },
+  "init_request": {"gate_id": "corpus_embed"}
+}
