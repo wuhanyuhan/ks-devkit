@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/wuhanyuhan/ks-devkit/sdk/go v0.0.0-00010101000000-000000000000
-	github.com/wuhanyuhan/ks-types v0.35.0
+	github.com/wuhanyuhan/ks-types v0.43.0
 )
 
 require (
@@ -19,6 +19,7 @@ require (
 // internal 包）必须用本地 replace，否则 go run 拒绝拉远程伪版本。
 replace (
 	github.com/wuhanyuhan/ks-devkit => ../../../../..
+	github.com/wuhanyuhan/ks-devkit/conformance => ../../../../../conformance
 	github.com/wuhanyuhan/ks-devkit/sdk/go => ../../../../go
 	github.com/wuhanyuhan/ks-types => ../../../../../../ks-types
 )

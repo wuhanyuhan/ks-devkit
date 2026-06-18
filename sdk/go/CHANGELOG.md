@@ -1,5 +1,12 @@
 # ksapp SDK Changelog
 
+## [sdk/go/v0.17.0] - 2026-06-18
+
+### Added
+
+- `/ks-readiness` + `/ks-readiness/init` 端点脚手架：`App.RegisterInitTask(gateID, handler)` 注册 init_task 门初始化逻辑（progress 上报、幂等重触发），SDK 管理 pending/running/ready/failed 内存态。消费 ks-types v0.43.0 wire 类型；端点无鉴权（同 /healthz、/meta 通路）。
+- `go.mod`：`github.com/wuhanyuhan/ks-types` 升至 v0.43.0。
+
 ## [sdk/go/v0.15.0] - 2026-06-02
 
 ### Added

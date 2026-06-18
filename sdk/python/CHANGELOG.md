@@ -1,5 +1,11 @@
 # ks-app-sdk Changelog
 
+## [sdk/python/v0.13.0] - 2026-06-18
+
+### Added
+
+- `/ks-readiness` + `/ks-readiness/init` 端点脚手架：`@app.init_task(gate_id)` 注册 init_task 门初始化逻辑（progress 上报、幂等重触发），SDK 管理 pending/running/ready/failed 内存态。wire 形状与 ks-types v0.43.0 + shared-fixtures 对齐；端点无鉴权（同 /healthz、/meta 通路）。
+
 ## [sdk/python/v0.11.0] - 2026-06-02
 
 ### Added
