@@ -35,6 +35,7 @@ from .config_consistency import (
     check_nav_config_consistency,
 )
 from .mcpproto import legacy_call_route, legacy_list_route, mcp_route
+from .readiness import make_init_task_decorator, readiness_routes
 from .vector_store import VectorStoreClient
 
 logger = logging.getLogger(__name__)
@@ -117,6 +118,8 @@ class App:
         # 与 self._tools 并列存放；create_app() 启动期与 manifest.provides 对齐校验。
         self._capabilities: dict[str, CapabilityEntry] = {}
         self.capability = make_capability_decorator(self._capabilities, self.app_id)
+        self._init_tasks: dict = {}
+        self.init_task = make_init_task_decorator(self._init_tasks)
         # 测试钩子：注入 ScopedJWTVerifier 静态 key（绕过 JWKS 网络）。
         self._scoped_jwt_test_keys: dict[str, str] = {}
         self._http_capability_path_map: dict[str, str] = {}
@@ -636,6 +639,9 @@ class App:
                     ),
                 ]
             )
+
+        if self._init_tasks:
+            routes = routes + readiness_routes(self._init_tasks)
 
         if self._config_ui_dir:
             routes.append(
