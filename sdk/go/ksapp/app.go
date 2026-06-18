@@ -74,6 +74,8 @@ type App struct {
 	staticRootDir string
 	// Capability Mesh：本应用 provides 的 capability 注册表。
 	capabilities map[string]*capabilityEntry
+	// 就绪契约：本应用 init_task 就绪门的初始化逻辑 + 运行时态（RegisterInitTask 注册；Mux 挂 /ks-readiness）。
+	initTasks map[string]*initTaskRuntime
 	// finalize 期缓存的 manifest capability specs（供 wireMCPToolBackend 四象限遍历）。
 	manifestCaps []kstypes.CapabilitySpec
 	// finalize 路径幂等保护：Mux 入口幂等调，重复 build 不重注册 tool。
@@ -105,6 +107,7 @@ func New(id string, opts ...Option) *App {
 		protocolVersion:   "1.0", // 对齐 meta.Declare 默认值
 		configHandleTypes: make(map[string]struct{}),
 		capabilities:      make(map[string]*capabilityEntry),
+		initTasks:         make(map[string]*initTaskRuntime),
 	}
 	for _, opt := range opts {
 		opt(app)
@@ -369,6 +372,10 @@ func (a *App) Mux() http.Handler {
 	registerHealthEndpoints(mux, a.id, a.healthChecks)
 	registerMetaEndpoint(mux, a.id, a.version, effectiveMode, a.tools,
 		a.nav, a.permissions, a.configMode, a.configStatus, a.protocolVersion, a.configUI)
+	// 就绪端点：仅当应用注册了 init_task 门时挂载（向后兼容：无 init_task 的应用无此端点）。
+	if len(a.initTasks) > 0 {
+		registerReadinessEndpoints(mux, a.initTasks)
+	}
 
 	toolDefs := a.mcpToolDefs()
 
