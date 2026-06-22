@@ -1,5 +1,11 @@
 # ksapp SDK Changelog
 
+## [sdk/go/v0.18.0] - 2026-06-22
+
+### Added
+
+- `ConfigSpec` 新增 `OnTest` 与 `OnSaveValidate` 回调：`/ks-config/validate` 在本地 `OnValidate` 通过后才运行显式测试，`/ks-config/save` 优先使用 `OnSaveValidate` 做保存前校验并且不会触发 `OnTest`。未设置新回调时保持旧版 `OnValidate` 兼容语义。
+
 ## [sdk/go/v0.17.0] - 2026-06-18
 
 ### Added
