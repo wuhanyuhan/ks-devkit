@@ -15,10 +15,18 @@ import (
 	"github.com/wuhanyuhan/ks-devkit/sdk/go/ksapp/ksconfig"
 )
 
-// ConfigSpec[T] 是 NewConfigOn 的入参；承载 OnValidate / OnApply 回调。
+// ConfigSpec[T] 是 NewConfigOn 的入参；承载配置校验、显式测试和应用回调。
 type ConfigSpec[T any] struct {
+	// OnValidate 是本地/业务校验回调。
+	// 兼容性：
+	//   - OnTest 为空时，/ks-config/validate 只调用 OnValidate。
+	//   - OnSaveValidate 为空时，/ks-config/save 继续用 OnValidate 做保存前校验。
 	OnValidate func(ctx context.Context, cfg *T) error
-	OnApply    func(ctx context.Context, cfg *T) error
+	// OnTest 只由 /ks-config/validate 在 OnValidate 成功后调用。
+	OnTest func(ctx context.Context, cfg *T) error
+	// OnSaveValidate 只由 /ks-config/save 在持久化前调用。
+	OnSaveValidate func(ctx context.Context, cfg *T) error
+	OnApply        func(ctx context.Context, cfg *T) error
 }
 
 // Config[T] 是类型化配置 handle；内部用 atomic.Pointer 保证热路径 Get() 无锁。
@@ -61,7 +69,7 @@ type anyConfigHandle interface {
 	//   否则 httpStatus / errCode / errMsg 承载错误响应。
 	applySaveFromBytes(ctx context.Context, plaintext []byte, aadFields map[string]any) (uint64, int, string, string)
 	// validateFromBytes 被 /ks-config/validate handler 调用。
-	// 仅走 Schema 反序列化 + OnValidate；不落盘、不切换、不触发 OnApply。
+	// 仅走 Schema 反序列化 + OnValidate/OnTest；不落盘、不切换、不触发 OnApply。
 	// 返回：errCode "" 表示成功；否则承载错误响应（httpStatus 由 handler 按 code 映射）。
 	validateFromBytes(ctx context.Context, plaintext []byte) (string, string)
 	restorePersisted(ctx context.Context) (bool, error)
@@ -185,17 +193,22 @@ func (c *Config[T]) Get() *T {
 	return c.ptr.Load()
 }
 
-// handleValidate 被 /ks-config/validate 端点调用。MVP 只走 OnValidate。
+// handleValidate 被 /ks-config/validate 端点调用。
 func (c *Config[T]) handleValidate(ctx context.Context, newCfg *T) error {
-	if c.spec.OnValidate == nil {
-		return nil
+	if c.spec.OnValidate != nil {
+		if err := c.spec.OnValidate(ctx, newCfg); err != nil {
+			return err
+		}
 	}
-	return c.spec.OnValidate(ctx, newCfg)
+	if c.spec.OnTest != nil {
+		return c.spec.OnTest(ctx, newCfg)
+	}
+	return nil
 }
 
 // handleSave 被 /ks-config/save 端点调用。完整流程：
 //
-//  1. OnValidate 校验 newCfg —— 失败 → ERR_VALIDATE，不写盘、不切 atomic ptr
+//  1. OnSaveValidate 或 OnValidate 校验 newCfg —— 失败 → ERR_VALIDATE，不写盘、不切 atomic ptr
 //  2. JSON 序列化 newCfg —— 失败 → ERR_SCHEMA
 //  3. EncryptConfigToFile（DEK + AES-GCM）写盘 —— 失败 → ERR_STORE
 //  4. atomic.Pointer 切换内存配置
@@ -214,7 +227,11 @@ func (c *Config[T]) handleSave(ctx context.Context, newCfg *T) error {
 	c.writeMu.Lock()
 	defer c.writeMu.Unlock()
 
-	if c.spec.OnValidate != nil {
+	if c.spec.OnSaveValidate != nil {
+		if err := c.spec.OnSaveValidate(ctx, newCfg); err != nil {
+			return errBizf("ERR_VALIDATE", err)
+		}
+	} else if c.spec.OnValidate != nil {
 		if err := c.spec.OnValidate(ctx, newCfg); err != nil {
 			return errBizf("ERR_VALIDATE", err)
 		}

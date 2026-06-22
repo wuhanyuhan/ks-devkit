@@ -1,6 +1,7 @@
 package ksapp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -73,6 +74,86 @@ func TestConfig_HandleValidate_Called(t *testing.T) {
 	}
 	if validated.Load() != 1 {
 		t.Errorf("OnValidate 未被调用")
+	}
+}
+
+func TestHandleValidate_UsesOnTestWhenPresent(t *testing.T) {
+	app := New("test-app-config-test")
+	var localValidated atomic.Int32
+	var providerTested atomic.Int32
+	var savedValidated atomic.Int32
+
+	cfg := NewConfigOn[testCfg](app, ConfigSpec[testCfg]{
+		OnValidate: func(ctx context.Context, c *testCfg) error {
+			localValidated.Add(1)
+			return nil
+		},
+		OnTest: func(ctx context.Context, c *testCfg) error {
+			providerTested.Add(1)
+			return nil
+		},
+		OnSaveValidate: func(ctx context.Context, c *testCfg) error {
+			savedValidated.Add(1)
+			return nil
+		},
+	})
+
+	if err := cfg.handleValidate(context.Background(), &testCfg{APIKey: "k"}); err != nil {
+		t.Fatalf("handleValidate: %v", err)
+	}
+	if localValidated.Load() != 1 {
+		t.Fatalf("OnValidate calls=%d, want 1", localValidated.Load())
+	}
+	if providerTested.Load() != 1 {
+		t.Fatalf("OnTest calls=%d, want 1", providerTested.Load())
+	}
+	if savedValidated.Load() != 0 {
+		t.Fatalf("OnSaveValidate calls=%d, want 0", savedValidated.Load())
+	}
+}
+
+func TestHandleSave_UsesOnSaveValidateAndDoesNotUseOnTest(t *testing.T) {
+	app := New("test-app-config-save")
+	var localValidated atomic.Int32
+	var providerTested atomic.Int32
+	var savedValidated atomic.Int32
+	var applied atomic.Int32
+
+	cfg := NewConfigOn[testCfg](app, ConfigSpec[testCfg]{
+		OnValidate: func(ctx context.Context, c *testCfg) error {
+			localValidated.Add(1)
+			return nil
+		},
+		OnTest: func(ctx context.Context, c *testCfg) error {
+			providerTested.Add(1)
+			return nil
+		},
+		OnSaveValidate: func(ctx context.Context, c *testCfg) error {
+			savedValidated.Add(1)
+			return nil
+		},
+		OnApply: func(ctx context.Context, c *testCfg) error {
+			applied.Add(1)
+			return nil
+		},
+	})
+	cfg.dek = bytes.Repeat([]byte{1}, 32)
+	cfg.persistPath = filepath.Join(t.TempDir(), "mcp-config.enc")
+
+	if err := cfg.handleSave(context.Background(), &testCfg{APIKey: "k"}); err != nil {
+		t.Fatalf("handleSave: %v", err)
+	}
+	if localValidated.Load() != 0 {
+		t.Fatalf("OnValidate calls=%d, want 0 when OnSaveValidate is present", localValidated.Load())
+	}
+	if providerTested.Load() != 0 {
+		t.Fatalf("OnTest calls=%d, want 0", providerTested.Load())
+	}
+	if savedValidated.Load() != 1 {
+		t.Fatalf("OnSaveValidate calls=%d, want 1", savedValidated.Load())
+	}
+	if applied.Load() != 1 {
+		t.Fatalf("OnApply calls=%d, want 1", applied.Load())
 	}
 }
 

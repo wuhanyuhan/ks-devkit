@@ -589,6 +589,56 @@ func TestConfigSave_EndToEnd_Success(t *testing.T) {
 	}
 }
 
+func TestConfigSave_EndToEnd_DoesNotRunOnTest(t *testing.T) {
+	var localValidated atomic.Int32
+	var providerTested atomic.Int32
+	var savedValidated atomic.Int32
+	var applied atomic.Int32
+	app, _, serverPub, fp := bootstrapAppForSaveTest(t, "save-no-provider-test", ConfigSpec[handlerTestCfg]{
+		OnValidate: func(ctx context.Context, c *handlerTestCfg) error {
+			localValidated.Add(1)
+			return nil
+		},
+		OnTest: func(ctx context.Context, c *handlerTestCfg) error {
+			providerTested.Add(1)
+			return nil
+		},
+		OnSaveValidate: func(ctx context.Context, c *handlerTestCfg) error {
+			savedValidated.Add(1)
+			return nil
+		},
+		OnApply: func(ctx context.Context, c *handlerTestCfg) error {
+			applied.Add(1)
+			return nil
+		},
+	})
+
+	plaintext, _ := json.Marshal(handlerTestCfg{APIKey: "sk-save-only"})
+	payload := encryptPayload(t, "ks-mcp-test", 2, serverPub, fp, plaintext, validUUID4)
+	body := encodePayload(t, payload)
+
+	req := httptest.NewRequest("POST", "/ks-config/save", strings.NewReader(string(body)))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	app.configSaveHandler().ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+	if localValidated.Load() != 0 {
+		t.Fatalf("OnValidate calls=%d, want 0 when OnSaveValidate is present", localValidated.Load())
+	}
+	if providerTested.Load() != 0 {
+		t.Fatalf("OnTest calls=%d, want 0", providerTested.Load())
+	}
+	if savedValidated.Load() != 1 {
+		t.Fatalf("OnSaveValidate calls=%d, want 1", savedValidated.Load())
+	}
+	if applied.Load() != 1 {
+		t.Fatalf("OnApply calls=%d, want 1", applied.Load())
+	}
+}
+
 // TestConfigSave_IdempotencyHit 覆盖幂等语义：同 payload 发两次，第二次复用
 // 缓存的 response；OnApply 只应被调用一次。
 func TestConfigSave_IdempotencyHit(t *testing.T) {

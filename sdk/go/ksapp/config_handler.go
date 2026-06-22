@@ -6,7 +6,7 @@ package ksapp
 //   - POST /ks-config/save + POST /ks-config/validate
 //
 // /ks-config/save 完整实现 9 步解密 + handleSave + 幂等 LRU；
-// /ks-config/validate 仅走 1-5 步（解密 + schema 反序列化 + OnValidate）。
+// /ks-config/validate 仅走 1-5 步（解密 + schema 反序列化 + OnValidate/OnTest）。
 
 import (
 	"bytes"
@@ -207,7 +207,7 @@ func (a *App) configSaveHandler() http.Handler {
 
 // configValidateHandler 返回 POST /ks-config/validate 的 http.Handler。
 //
-// 流程（仅走 save 步骤 1-5：AAD 对比 + X25519 + AES-GCM + Schema 反序列化 + OnValidate）：
+// 流程（仅走 save 步骤 1-5：AAD 对比 + X25519 + AES-GCM + Schema 反序列化 + OnValidate/OnTest）：
 //  1. decode payload → 失败 → 400 + ERR_SCHEMA
 //  2. idempotency_key 可选（明确不强制）
 //  3. 无 Config handle → 404 + ERR_NO_CONFIG_HANDLE
